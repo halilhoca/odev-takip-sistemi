@@ -1,0 +1,2178 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EduFlow | Ödev Takip Sistemi (Firebase)</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* === ÖNCEKİ CSS KODUNUZ BURADA === */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            /* Açık tema için renkler */
+            --primary: #4361ee; --primary-dark: #3a56d4; --primary-light: #a8b5ff;
+            --secondary: #6930c3; --secondary-dark: #5429b3; --accent: #48bfe3;
+            --success: #06d6a0; --success-dark: #05be8c; --warning: #ffd166;
+            --warning-dark: #ffc233; --danger: #ef476f; --danger-dark: #ec2654;
+            --light: #f8f9fa; --light-dark: #e9ecef; --dark: #212529;
+            --dark-light: #343a40; --gray-lightest: #f8f9fa; --gray-lighter: #e9ecef;
+            --gray-light: #ced4da; --gray: #adb5bd; --gray-dark: #6c757d;
+            --gray-darker: #495057; --gray-darkest: #343a40; --button-text: #ffffff;
+            --button-text-alt: #1a202c; --border-color: #d1d5db;
+            /* RGB versiyonları */
+            --primary-rgb: 67, 97, 238; --secondary-rgb: 105, 48, 195;
+            --danger-rgb: 239, 71, 111; --success-rgb: 6, 214, 160;
+            --warning-rgb: 255, 209, 102;
+        }
+        .dark {
+            /* Koyu tema için renkler */
+            --primary: #80a6ff; --primary-dark: #6495ff; --primary-light: #b3c6ff;
+            --secondary: #a575ff; --secondary-dark: #9256ff; --accent: #73e5ff;
+            --success: #20eda9; --success-dark: #0ee8a0; --warning: #ffde85;
+            --warning-dark: #ffd766; --danger: #ff7c98; --danger-dark: #ff5980;
+            --light: #2d3748; --light-dark: #1a202c; --dark: #f8f9fa;
+            --dark-light: #e9ecef; --gray-lightest: #374151; --gray-lighter: #4b5563;
+            --gray-light: #6b7280; --gray: #9ca3af; --gray-dark: #d1d5db;
+            --gray-darker: #e5e7eb; --gray-darkest: #f3f4f6; --button-text: #ffffff;
+            --button-text-alt: #1a202c; --border-color: #4b5563;
+             /* RGB versiyonları (koyu tema için farklı olabilir, ama şimdilik aynı) */
+            --primary-rgb: 128, 166, 255; --secondary-rgb: 165, 117, 255;
+            --danger-rgb: 255, 124, 152; --success-rgb: 32, 237, 169;
+            --warning-rgb: 255, 222, 133;
+        }
+        * { font-family: 'Poppins', sans-serif; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html { font-size: 16px; }
+        @media (max-width: 640px) {
+            html { font-size: 16px; } .text-xs { font-size: 0.8rem; } .text-sm { font-size: 0.9rem; }
+            .text-base { font-size: 1rem; } .text-lg { font-size: 1.125rem; } .text-xl { font-size: 1.25rem; }
+            .text-2xl { font-size: 1.5rem; } button, a, input, select { min-height: 2.75rem; padding: 0.5rem 1rem; }
+            .mobile-pad-y { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+            .mobile-pad-x { padding-left: 0.75rem; padding-right: 0.75rem; }
+        }
+        body { background-color: var(--light); color: var(--dark); transition: background-color 0.3s, color 0.3s; }
+        body.dark { background-color: var(--light-dark); color: var(--dark); }
+        .btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; font-weight: 600; border-radius: 0.5rem; transition: all 0.2s; cursor: pointer; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); border: 2px solid transparent; min-height: 2.75rem; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-sm { padding: 0.3rem 0.8rem; min-height: 2rem; font-size: 0.875rem; }
+        .btn-primary { background-color: var(--primary); color: var(--button-text); } .btn-primary:hover:not(:disabled) { background-color: var(--primary-dark); }
+        .btn-secondary { background-color: var(--secondary); color: var(--button-text); } .btn-secondary:hover:not(:disabled) { background-color: var(--secondary-dark); }
+        .btn-success { background-color: var(--success); color: var(--button-text); } .btn-success:hover:not(:disabled) { background-color: var(--success-dark); }
+        .btn-danger { background-color: var(--danger); color: var(--button-text); } .btn-danger:hover:not(:disabled) { background-color: var(--danger-dark); }
+        .btn-warning { background-color: var(--warning); color: var(--button-text-alt); } .btn-warning:hover:not(:disabled) { background-color: var(--warning-dark); }
+        .btn-light { background-color: var(--gray-lighter); color: var(--dark); border: 1px solid var(--border-color); } .btn-light:hover:not(:disabled) { background-color: var(--gray-light); }
+        .dark .btn-light { background-color: var(--gray-lighter); color: var(--dark); border-color: var(--border-color); } .dark .btn-light:hover:not(:disabled) { background-color: var(--gray-light); }
+        .card { background-color: #ffffff; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1); transition: all 0.3s; border: 1px solid var(--border-color); }
+        .dark .card { background-color: var(--light); border-color: var(--gray-light); }
+        .tab-content { display: none; } .tab-content.active { display: block; } .dark { color-scheme: dark; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: var(--gray-lighter); border-radius: 8px; }
+        .dark ::-webkit-scrollbar-track { background: var(--gray-darker); } ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary-dark); }
+        .animate-fade-in { animation: fadeIn 0.4s ease-in-out; } .animate-slide-up { animation: slideUp 0.3s ease-out; }
+        .animate-slide-down { animation: slideDown 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .loader { border: 3px solid rgba(var(--primary-rgb), 0.3); border-radius: 50%; border-top: 3px solid var(--primary); width: 24px; height: 24px; animation: spin 1s linear infinite; display: inline-block; } /* display: inline-block eklendi */
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .toast { visibility: hidden; min-width: 280px; background-color: var(--primary); color: white; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 100; left: 50%; bottom: 30px; transform: translateX(-50%) translateY(100px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); }
+        .toast.show { visibility: visible; animation: toast-in 0.5s, toast-out 0.5s 2.5s; animation-fill-mode: forwards; }
+        @keyframes toast-in { from {transform: translateX(-50%) translateY(100px); opacity: 0;} to {transform: translateX(-50%) translateY(0); opacity: 1;} }
+        @keyframes toast-out { from {transform: translateX(-50%) translateY(0); opacity: 1;} to {transform: translateX(-50%) translateY(100px); opacity: 0;} }
+        .hover-card { transition: all 0.3s ease; } .hover-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); }
+        .custom-checkbox { width: 32px; height: 32px; background-color: white; border: 2px solid var(--gray); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); flex-shrink: 0; }
+        .dark .custom-checkbox { background-color: var(--light); border-color: var(--gray); }
+        .custom-checkbox.checked { background-color: var(--success); border-color: var(--success); }
+        .custom-checkbox i { color: white; font-size: 16px; display: none; } .custom-checkbox.checked i { display: block; }
+        .progress-container { width: 100%; height: 8px; background-color: var(--gray-lighter); border-radius: 4px; overflow: hidden; }
+        .dark .progress-container { background-color: var(--gray-darker); } .progress-bar { height: 100%; background-color: var(--success); border-radius: 4px; transition: width 0.3s ease; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background-color: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 18px; flex-shrink: 0; }
+        #qrcode { display: flex; justify-content: center; padding: 1rem; background-color: white; border-radius: 8px; }
+        @media (max-width: 640px) { .responsive-table { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; } .responsive-table::-webkit-scrollbar { height: 4px; } }
+        @media (max-width: 640px) { .custom-checkbox { width: 28px; height: 28px; } .custom-checkbox i { font-size: 14px; } .touch-target { min-height: 44px; min-width: 44px; display: flex; align-items: center; justify-content: center; } button, .button, a, input[type="button"], input[type="submit"] { min-height: 44px; } }
+        .json-textarea { width: 100%; min-height: 200px; font-family: monospace; white-space: pre; overflow-wrap: normal; overflow-x: scroll; tab-size: 2; }
+        input, select, textarea { background-color: #ffffff; border: 1px solid var(--border-color); color: var(--dark); border-radius: 0.5rem; transition: all 0.3s; padding: 0.5rem 0.75rem; }
+        input[type="time"] { padding: 0.5rem 0.5rem; }
+        .dark input, .dark select, .dark textarea { background-color: var(--gray-lighter); border-color: var(--gray-light); color: var(--gray-darkest); }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.2); }
+        input.form-radio { padding: 0; height: 1em; width: 1em; margin-right: 0.5em; }
+        table { border-collapse: separate; border-spacing: 0; width: 100%; }
+        table th { background-color: var(--gray-lightest); color: var(--gray-dark); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 1rem; text-align: left; border-bottom: 2px solid var(--border-color); }
+        .dark table th { background-color: var(--gray-lightest); color: var(--gray-dark); border-bottom-color: var(--gray-light); }
+        table td { padding: 1rem; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+        .dark table td { border-bottom-color: var(--gray-light); }
+        .action-btn { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 9999px; transition: all 0.2s; cursor: pointer; border: 2px solid transparent; }
+        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .action-btn-view { background-color: rgba(var(--primary-rgb), 0.15); color: var(--primary); } .dark .action-btn-view { background-color: rgba(var(--primary-rgb), 0.25); color: var(--primary-light); } .action-btn-view:hover:not(:disabled) { background-color: var(--primary); color: white; }
+        .action-btn-delete { background-color: rgba(var(--danger-rgb), 0.15); color: var(--danger); } .dark .action-btn-delete { background-color: rgba(var(--danger-rgb), 0.25); color: var(--danger); } .action-btn-delete:hover:not(:disabled) { background-color: var(--danger); color: white; }
+        #sidebar { background-color: white; border-right: 1px solid var(--border-color); } .dark #sidebar { background-color: var(--light); border-right-color: var(--gray-light); }
+        .nav-link { display: flex; align-items: center; padding: 0.75rem 1rem; border-radius: 0.5rem; transition: all 0.3s; margin-bottom: 0.25rem; color: var(--gray-dark); }
+        .dark .nav-link { color: var(--gray-dark); } .nav-link:hover { background-color: var(--gray-lightest); color: var(--primary); }
+        .dark .nav-link:hover { background-color: var(--gray-lighter); color: var(--primary-light); } .nav-link.active { background-color: var(--primary); color: white !important; }
+        .nav-link i { width: 1.25rem; text-align: center; color: var(--gray); transition: color 0.3s; } .dark .nav-link i { color: var(--gray); }
+        .nav-link:hover i { color: var(--primary); } .dark .nav-link:hover i { color: var(--primary-light); } .nav-link.active i { color: white !important; }
+        /* === / ÖNCEKİ CSS KODUNUZ BURADA BİTİYOR === */
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 min-h-screen transition-colors duration-150">
+    <div id="toast" class="toast">
+        <span id="toast-message"></span>
+    </div>
+
+    <!-- Student View Mode (Hidden by default) -->
+    <div id="student-view" class="hidden">
+        <!-- Student view HTML içeriği aynı kalabilir, JS dinamik olarak dolduracak -->
+        <header class="bg-white dark:bg-gray-800 shadow-md">
+            <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center">
+                <div class="flex items-center mb-3 sm:mb-0">
+                    <div class="flex items-center">
+                        <i class="fas fa-book-reader text-primary text-3xl mr-3"></i>
+                        <h1 class="text-xl font-bold text-gray-900 dark:text-white">EduFlow</h1>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="toggle-theme-student" class="btn btn-light touch-target">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button id="back-to-login-student" class="btn btn-primary touch-target">
+                        <i class="fas fa-arrow-left mr-2"></i>Ana Sayfa
+                    </button>
+                </div>
+            </div>
+        </header>
+        <main class="max-w-6xl mx-auto px-4 py-6 animate-fade-in">
+            <div id="student-view-content">
+                <!-- Loading indicator -->
+                 <div class="text-center py-10">
+                     <div class="loader mx-auto"></div>
+                     <p class="mt-2 text-gray-500 dark:text-gray-400">Program yükleniyor...</p>
+                 </div>
+                <!-- Program content will be dynamically loaded here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Teacher Login (Hidden if URL has params OR user logged in) -->
+    <div id="teacher-login" class="min-h-screen flex items-center justify-center p-4">
+        <div class="card w-full max-w-md p-8 animate-slide-up">
+            <div class="flex flex-col items-center mb-8">
+                <div class="flex items-center justify-center w-16 h-16 bg-primary rounded-full mb-4">
+                    <i class="fas fa-book-reader text-white text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-center text-gray-800 dark:text-white">EduFlow</h2>
+                <p class="text-gray-600 dark:text-gray-400 text-center mt-2">Öğretmen Girişi</p>
+            </div>
+
+            <div class="space-y-4">
+                <!-- E-posta alanı eklendi (veya sabit kullanılacaksa gizlenebilir) -->
+                 <div>
+                    <label for="email" class="block text-sm font-medium mb-1">E-posta</label>
+                    <input type="email" id="email" class="w-full px-4 py-3 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="teacher@eduflow.com" value="teacher@eduflow.com">
+                 </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium mb-1">Şifre</label>
+                    <div class="relative">
+                        <input type="password" id="password" class="w-full px-4 py-3 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Şifrenizi girin">
+                        <button id="toggle-password" class="absolute right-3 top-3 text-gray-500 dark:text-gray-400 focus:outline-none touch-target">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <button id="login-btn" class="btn btn-primary w-full text-lg touch-target">
+                    Giriş Yap
+                </button>
+                <div class="flex justify-end">
+                    <button id="toggle-theme-login" class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none touch-target">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teacher Dashboard (Hidden by default) -->
+    <div id="teacher-dashboard" class="hidden min-h-screen flex">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 shadow-lg fixed h-full z-30 transition-transform duration-300 transform sm:translate-x-0 -translate-x-full">
+            <div class="px-6 py-6 flex items-center justify-between">
+                <div class="flex items-center">
+                    <i class="fas fa-book-reader text-primary text-2xl mr-3"></i>
+                    <span class="text-xl font-bold text-gray-800 dark:text-white">EduFlow</span>
+                </div>
+                <button id="close-sidebar" class="sm:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 focus:outline-none touch-target">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="px-6 py-4">
+                <div id="teacher-profile" class="flex items-center mb-6">
+                    <div class="avatar bg-primary">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 id="teacher-email-display" class="font-medium text-gray-800 dark:text-white text-sm">Öğretmen</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Admin</p>
+                    </div>
+                </div>
+                <nav class="space-y-1">
+                     <a href="#" class="nav-link active touch-target" data-tab="dashboard"> <i class="fas fa-tachometer-alt"></i> <span class="ml-3">Genel Bakış</span> </a>
+                     <a href="#" class="nav-link touch-target" data-tab="students"> <i class="fas fa-user-graduate"></i> <span class="ml-3">Öğrenciler</span> </a>
+                     <a href="#" class="nav-link touch-target" data-tab="books"> <i class="fas fa-book"></i> <span class="ml-3">Kitaplar</span> </a>
+                     <a href="#" class="nav-link touch-target" data-tab="programs"> <i class="fas fa-calendar-alt"></i> <span class="ml-3">Programlar</span> </a>
+                     <a href="#" class="nav-link touch-target" data-tab="progress"> <i class="fas fa-chart-line"></i> <span class="ml-3">İlerleme</span> </a>
+                     <a href="#" class="nav-link touch-target" data-tab="data"> <i class="fas fa-database"></i> <span class="ml-3">Veri Yönetimi</span> </a>
+                </nav>
+            </div>
+            <div class="absolute bottom-0 left-0 right-0 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+                <button id="logout-btn" class="w-full flex items-center px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white focus:outline-none touch-target">
+                    <i class="fas fa-sign-out-alt w-5"></i> <span class="ml-3">Çıkış Yap</span>
+                </button>
+                <button id="toggle-theme" class="w-full flex items-center px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white focus:outline-none touch-target mt-2">
+                    <i class="fas fa-moon w-5"></i> <span class="ml-3">Tema Değiştir</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div id="main-content" class="flex-1 sm:ml-64 min-h-screen">
+            <header class="bg-white dark:bg-gray-800 shadow-md">
+                 <div class="px-4 py-4 flex justify-between items-center">
+                     <button id="open-sidebar" class="sm:hidden p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none touch-target"> <i class="fas fa-bars"></i> </button>
+                     <h1 id="page-title" class="text-xl font-bold text-gray-800 dark:text-white">Genel Bakış</h1>
+                     <div> <!-- Bildirim butonu vb. eklenebilir --> </div>
+                 </div>
+             </header>
+            <main class="px-4 py-6">
+                <!-- Dashboard Tab -->
+                <div id="dashboard-tab" class="tab-content active">
+                    <!-- Dashboard içeriği aynı kalabilir, JS dinamik olarak dolduracak -->
+                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                         <div class="card p-6 hover-card"> <div class="flex items-center justify-between"> <div> <p class="text-sm text-gray-500 dark:text-gray-400">Toplam Öğrenci</p> <h3 class="text-3xl font-bold text-gray-800 dark:text-white mt-1" id="student-count">0</h3> </div> <div class="h-12 w-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center"> <i class="fas fa-user-graduate text-primary text-xl"></i> </div> </div> <div class="mt-4"> <button class="text-primary hover:text-primary-dark text-sm flex items-center touch-target" data-tab-link="students"> Tüm öğrencileri gör <i class="fas fa-arrow-right ml-1"></i> </button> </div> </div>
+                         <div class="card p-6 hover-card"> <div class="flex items-center justify-between"> <div> <p class="text-sm text-gray-500 dark:text-gray-400">Toplam Kitap</p> <h3 class="text-3xl font-bold text-gray-800 dark:text-white mt-1" id="book-count">0</h3> </div> <div class="h-12 w-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center"> <i class="fas fa-book text-success text-xl"></i> </div> </div> <div class="mt-4"> <button class="text-success hover:text-success-dark text-sm flex items-center touch-target" data-tab-link="books"> Tüm kitapları gör <i class="fas fa-arrow-right ml-1"></i> </button> </div> </div>
+                         <div class="card p-6 hover-card"> <div class="flex items-center justify-between"> <div> <p class="text-sm text-gray-500 dark:text-gray-400">Toplam Program</p> <h3 class="text-3xl font-bold text-gray-800 dark:text-white mt-1" id="program-count">0</h3> </div> <div class="h-12 w-12 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center"> <i class="fas fa-calendar-alt text-secondary text-xl"></i> </div> </div> <div class="mt-4"> <button class="text-secondary hover:text-secondary-dark text-sm flex items-center touch-target" data-tab-link="programs"> Tüm programları gör <i class="fas fa-arrow-right ml-1"></i> </button> </div> </div>
+                     </div>
+                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                         <div class="card p-6"> <div class="flex items-center justify-between mb-4"> <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Ödev Tamamlama Oranı</h3> </div> <div id="completion-rates-container" class="space-y-4"> <div class="flex items-center text-gray-500 dark:text-gray-400 justify-center py-8"> <i class="fas fa-chart-pie text-4xl mr-3"></i> <p>Veriler yükleniyor...</p> </div> </div> </div>
+                         <div class="card p-6"> <div class="flex items-center justify-between mb-4"> <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Son Aktiviteler</h3> </div> <div class="divide-y divide-gray-200 dark:divide-gray-700 max-h-80 overflow-y-auto" id="recent-activities"> <div class="flex items-center text-gray-500 dark:text-gray-400 justify-center py-8"> <i class="fas fa-history text-4xl mr-3"></i> <p>Veriler yükleniyor...</p> </div> </div> </div>
+                     </div>
+                     <div class="card p-6">
+                         <div class="flex items-center justify-between mb-4"> <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Son Programlar</h3> <a href="#" class="text-primary hover:text-primary-dark text-sm touch-target" data-tab-link="programs"> Tümünü Gör </a> </div>
+                         <div class="overflow-x-auto responsive-table"> <table class="min-w-full"> <thead> <tr> <th>Tarih</th> <th>Öğrenci</th> <th>Başlık</th> <th>İlerleme</th> <th>İşlemler</th> </tr> </thead> <tbody id="recent-programs"> <tr><td colspan="5" class="text-center py-4 text-gray-500 dark:text-gray-400">Veriler yükleniyor...</td></tr> </tbody> </table> </div>
+                     </div>
+                </div>
+
+                <!-- Students Tab -->
+                <div id="students-tab" class="tab-content">
+                    <div class="card p-6 mb-6"> <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Öğrenci Ekle</h3> <div class="grid grid-cols-1 md:grid-cols-3 gap-4"> <div> <label for="student-name" class="block text-sm font-medium mb-1">İsim</label> <input type="text" id="student-name" class="w-full px-4 py-3 text-base rounded-lg" placeholder="Öğrenci adı"> </div> <div> <label for="student-class" class="block text-sm font-medium mb-1">Sınıf</label> <input type="text" id="student-class" class="w-full px-4 py-3 text-base rounded-lg" placeholder="Sınıf"> </div> <div class="flex items-end"> <button id="add-student-btn" class="btn btn-primary w-full text-base touch-target"> <i class="fas fa-plus mr-2"></i>Ekle </button> </div> </div> </div>
+                    <div class="card p-6"> <div class="flex justify-between items-center mb-4"> <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Öğrenci Listesi</h3> <div class="relative"> <input type="text" id="search-students" class="pl-10 pr-4 py-2 text-base rounded-lg" placeholder="Öğrenci ara..."> <div class="absolute left-3 top-3 text-gray-500 dark:text-gray-400"> <i class="fas fa-search"></i> </div> </div> </div> <div class="overflow-x-auto responsive-table"> <table class="min-w-full"> <thead> <tr> <th>Öğrenci</th> <th>Sınıf</th> <th>Programlar</th> <th>Tamamlama</th> <th>İşlemler</th> </tr> </thead> <tbody id="students-list"> <tr><td colspan="5" class="text-center py-4 text-gray-500 dark:text-gray-400">Veriler yükleniyor...</td></tr> </tbody> </table> </div> </div>
+                </div>
+
+                <!-- Books Tab -->
+                <div id="books-tab" class="tab-content">
+                    <div class="card p-6 mb-6"> <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Kitap Ekle</h3> <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"> <div> <label for="book-title" class="block text-sm font-medium mb-1">Kitap Adı</label> <input type="text" id="book-title" class="w-full px-4 py-3 text-base rounded-lg" placeholder="Kitap adı"> </div> <div> <label for="book-author" class="block text-sm font-medium mb-1">Yazar</label> <input type="text" id="book-author" class="w-full px-4 py-3 text-base rounded-lg" placeholder="Yazar adı"> </div> </div> <div class="mb-4"> <label for="book-students" class="block text-sm font-medium mb-1">Atanacak Öğrenciler (İsteğe bağlı, birden fazla seçmek için Ctrl/Cmd)</label> <select id="book-students" multiple class="w-full px-4 py-2 text-base rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 h-32 touch-target"> <option>Öğrenciler yükleniyor...</option> </select> </div> <button id="add-book-btn" class="btn btn-primary w-full text-base touch-target"> <i class="fas fa-plus mr-2"></i>Ekle </button> </div>
+                    <div class="card p-6"> <div class="flex justify-between items-center mb-4"> <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Kitap Listesi</h3> <div class="relative"> <input type="text" id="search-books" class="pl-10 pr-4 py-2 text-base rounded-lg" placeholder="Kitap ara..."> <div class="absolute left-3 top-3 text-gray-500 dark:text-gray-400"> <i class="fas fa-search"></i> </div> </div> </div> <div class="overflow-x-auto responsive-table"> <table class="min-w-full"> <thead> <tr> <th>Kitap Adı</th> <th>Yazar</th> <th>Atama Durumu</th> <th>İşlemler</th> </tr> </thead> <tbody id="books-list"> <tr><td colspan="4" class="text-center py-4 text-gray-500 dark:text-gray-400">Veriler yükleniyor...</td></tr> </tbody> </table> </div> </div>
+                </div>
+
+                <!-- Programs Tab -->
+                <div id="programs-tab" class="tab-content">
+                    <div class="card p-6 mb-6"> <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Program Oluştur</h3> <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"> <div> <label for="program-student" class="block text-sm font-medium mb-1">Öğrenci</label> <select id="program-student" class="w-full px-4 py-3 text-base rounded-lg touch-target"> <option value="">Öğrenci seçin</option> <option>Öğrenciler yükleniyor...</option> </select> </div> <div> <label for="program-title" class="block text-sm font-medium mb-1">Program Başlığı</label> <input type="text" id="program-title" class="w-full px-4 py-3 text-base rounded-lg" placeholder="Program başlığı"> </div> </div> <div class="mb-4"> <label class="block text-sm font-medium mb-2">Program Türü</label> <div class="flex space-x-4"> <label class="flex items-center cursor-pointer"> <input type="radio" name="program-type" value="untimed" class="form-radio h-4 w-4 text-primary focus:ring-primary" checked> <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Saatsiz Program</span> </label> <label class="flex items-center cursor-pointer"> <input type="radio" name="program-type" value="timed" class="form-radio h-4 w-4 text-primary focus:ring-primary"> <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Saatli Program</span> </label> </div> </div> <div class="mb-4"> <label class="block text-sm font-medium mb-2">Haftalık Program (Lütfen önce öğrenci seçin)</label> <div id="weekly-schedule" class="space-y-6 opacity-50 pointer-events-none"> <!-- Days will be added here by populateWeekDays() --> </div> </div> <button id="create-program-btn" class="btn btn-primary w-full text-base touch-target"> <i class="fas fa-save mr-2"></i>Programı Oluştur </button> </div>
+                    <div class="card p-6"> <div class="flex justify-between items-center mb-4"> <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Program Listesi</h3> <div class="relative"> <input type="text" id="search-programs" class="pl-10 pr-4 py-2 text-base rounded-lg" placeholder="Program ara..."> <div class="absolute left-3 top-3 text-gray-500 dark:text-gray-400"> <i class="fas fa-search"></i> </div> </div> </div> <div class="overflow-x-auto responsive-table"> <table class="min-w-full"> <thead> <tr> <th>Tarih</th> <th>Öğrenci</th> <th>Başlık (Tür)</th> <th>İlerleme</th> <th>İşlemler</th> </tr> </thead> <tbody id="programs-list"> <tr><td colspan="5" class="text-center py-4 text-gray-500 dark:text-gray-400">Veriler yükleniyor...</td></tr> </tbody> </table> </div> </div>
+                </div>
+
+                <!-- Progress Tab -->
+                <div id="progress-tab" class="tab-content">
+                    <div class="card p-6 mb-6"> <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Öğrenci İlerleme Durumu</h3> <div class="mb-4"> <label for="progress-student-filter" class="block text-sm font-medium mb-1">Öğrenci Filtrele</label> <select id="progress-student-filter" class="w-full md:w-1/3 px-4 py-3 text-base rounded-lg touch-target"> <option value="">Tüm Öğrenciler</option> <option>Öğrenciler yükleniyor...</option> </select> </div> <div id="progress-charts-container" class="grid grid-cols-1 lg:grid-cols-2 gap-6"> <div class="flex items-center text-gray-500 dark:text-gray-400 justify-center py-8 lg:col-span-2"> <i class="fas fa-chart-line text-4xl mr-3"></i> <p>Veriler yükleniyor...</p> </div> </div> </div>
+                    <div class="card p-6"> <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Ödev Tamamlama Detayları</h3> <div id="assignment-completion-list" class="space-y-4 max-h-96 overflow-y-auto"> <div class="flex items-center text-gray-500 dark:text-gray-400 justify-center py-8"> <i class="fas fa-tasks text-4xl mr-3"></i> <p>Veriler yükleniyor...</p> </div> </div> </div>
+                </div>
+
+                <!-- Data Management Tab -->
+                <div id="data-tab" class="tab-content">
+                    <div class="card p-6 mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Veri Yönetimi (Firebase ile Farklı İşler)</h3>
+                        <p class="mb-4 text-gray-600 dark:text-gray-400">
+                            Firebase kullandığınız için verileriniz bulutta saklanır ve otomatik olarak senkronize edilir.
+                            Verileri dışa aktarma/içe aktarma işlemleri genellikle sunucu tarafında veya Firebase'in kendi araçlarıyla yapılır.
+                            QR kod ise genellikle öğrenci program görünümüne doğrudan bir bağlantı içerir.
+                        </p>
+                         <div class="flex flex-wrap gap-4 mb-6">
+                             <button id="export-data-btn-disabled" class="btn btn-primary text-base flex items-center touch-target" disabled title="Firebase verisini dışa aktarmak için Cloud Function veya manuel işlem gerekir.">
+                                 <i class="fas fa-file-export mr-2"></i>Verileri Dışa Aktar (Devre Dışı)
+                             </button>
+                             <button id="import-data-btn-disabled" class="btn btn-secondary text-base flex items-center touch-target" disabled title="Firebase verisini içe aktarmak için Cloud Function veya manuel işlem gerekir.">
+                                 <i class="fas fa-file-import mr-2"></i>Verileri İçe Aktar (Devre Dışı)
+                             </button>
+                             <button id="generate-qr-btn-disabled" class="btn btn-success text-base flex items-center touch-target" disabled title="Program bağlantısı QR kodu modal içinde oluşturulur.">
+                                 <i class="fas fa-qrcode mr-2"></i>QR Kod Oluştur (Devre Dışı)
+                             </button>
+                         </div>
+                         <!-- Eski export/import/qr alanları kaldırıldı veya devre dışı bırakıldı -->
+                    </div>
+                     <div class="card p-6">
+                         <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Veri Yedekleme (Firebase)</h3>
+                         <p class="mb-4 text-gray-600 dark:text-gray-400">
+                             Firebase Firestore verilerinizi otomatik olarak yedekler. Ayrıca Firebase konsolundan manuel yedek alabilir veya periyodik yedekleme ayarlayabilirsiniz.
+                         </p>
+                         <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                             <h4 class="font-medium text-gray-800 dark:text-white mb-2">Otomatik Bulut Senkronizasyonu</h4>
+                             <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                                 Verileriniz Firestore veritabanında saklanır ve giriş yaptığınız tüm cihazlarda otomatik olarak güncellenir.
+                             </p>
+                             <div class="flex items-center">
+                                 <span class="mr-2 text-sm text-gray-600 dark:text-gray-400">Durum:</span>
+                                 <span id="firebase-status" class="text-sm font-medium text-green-600 dark:text-green-400">Bağlı</span>
+                             </div>
+                         </div>
+                     </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Student Program Detail Modal -->
+    <div id="program-detail-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="card w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto animate-slide-up">
+             <div class="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
+                 <h3 id="modal-title" class="text-xl font-bold text-gray-800 dark:text-white">Program Detayı</h3>
+                 <button id="close-modal" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none touch-target"> <i class="fas fa-times text-xl"></i> </button>
+             </div>
+             <div id="modal-content" class="p-6 space-y-4"> <!-- İçerik JS ile dolacak --> </div>
+             <div class="p-6 flex flex-col sm:flex-row sm:justify-between items-center border-t border-gray-200 dark:border-gray-700">
+                 <div class="mb-4 sm:mb-0">
+                     <div class="text-sm text-gray-600 dark:text-gray-400 mb-2">Öğrenci İlerlemesi</div>
+                     <div class="progress-container w-full sm:w-48"> <div class="progress-bar" id="modal-progress-bar" style="width: 0%"></div> </div>
+                     <div class="text-xs text-gray-500 dark:text-gray-400 mt-1" id="modal-progress-text">0/0 ödev tamamlandı</div>
+                 </div>
+                 <div class="flex flex-wrap gap-3">
+                     <button id="copy-link-btn" class="btn btn-primary touch-target"> <i class="fas fa-link mr-2"></i>Linki Kopyala </button>
+                      <button id="generate-modal-qr-btn" class="btn btn-success touch-target"> <i class="fas fa-qrcode mr-2"></i>QR Kod Göster </button>
+                     <button id="close-modal-btn" class="btn btn-light touch-target"> Kapat </button>
+                 </div>
+             </div>
+              <!-- Modal içinde QR Kod gösterme alanı -->
+             <div id="modal-qr-container" class="p-4 text-center hidden bg-gray-100 dark:bg-gray-700">
+                 <h4 class="text-sm font-medium mb-2">Öğrenci Görünümü QR Kodu</h4>
+                 <div id="modal-qrcode" class="flex justify-center items-center min-h-[150px]">
+                      <!-- QR kod veya yükleniyor göstergesi buraya gelecek -->
+                 </div>
+                 <button id="close-modal-qr-btn" class="mt-3 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">Gizle</button>
+             </div>
+         </div>
+    </div>
+
+    <!-- Confirm Delete Modal -->
+    <div id="confirm-delete-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="card w-full max-w-md mx-4 animate-slide-up p-6"> <div class="text-center mb-4"> <i class="fas fa-exclamation-triangle text-yellow-500 text-4xl mb-4"></i> <h3 class="text-xl font-bold mb-2 text-gray-800 dark:text-white">Silme İşlemi</h3> <p id="delete-message" class="text-gray-600 dark:text-gray-400">Bu öğeyi silmek istediğinize emin misiniz?</p> <p id="delete-warning" class="text-xs text-red-600 dark:text-red-400 mt-2 hidden"></p> </div> <div class="flex justify-end space-x-4 mt-6"> <button id="cancel-delete" class="btn btn-light touch-target"> İptal </button> <button id="confirm-delete" class="btn btn-danger touch-target"> Sil </button> </div> </div>
+    </div>
+
+    <!-- QR Code Library (program modalı için) -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+        
+        // ****** BURAYA FIREBASE'DEN KOPYALADIĞINIZ firebaseConfig NESNESİNİ YAPIŞTIRIN ******
+        const firebaseConfig = {
+            apiKey: "AIzaSyCpFOqqRlSzOxpQmxukcU3D0QC2L1WY-pA",
+            authDomain: "eduflowapp-e2d9c.firebaseapp.com",
+            projectId: "eduflowapp-e2d9c",
+            storageBucket: "eduflowapp-e2d9c.firebasestorage.app",
+            messagingSenderId: "760963428335",
+            appId: "1:760963428335:web:763900322a20bf6ed4101a"
+        };
+        // Firebase'i Başlat
+        firebase.initializeApp(firebaseConfig);
+
+        // Firebase servislerine kolay erişim için değişkenler
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // --- DOM Elements (Değişiklik Yok) ---
+        const teacherLogin = document.getElementById('teacher-login');
+        const teacherDashboard = document.getElementById('teacher-dashboard');
+        const studentView = document.getElementById('student-view');
+        const emailInput = document.getElementById('email'); // Eklendi
+        const passwordInput = document.getElementById('password');
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const backToLoginStudentBtn = document.getElementById('back-to-login-student');
+        const togglePasswordBtn = document.getElementById('toggle-password');
+        const toggleThemeLoginBtn = document.getElementById('toggle-theme-login');
+        const toggleThemeBtn = document.getElementById('toggle-theme');
+        const toggleThemeStudentBtn = document.getElementById('toggle-theme-student');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const pageTitle = document.getElementById('page-title');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const programDetailModal = document.getElementById('program-detail-modal');
+        const closeModal = document.getElementById('close-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const copyLinkBtn = document.getElementById('copy-link-btn');
+        const confirmDeleteModal = document.getElementById('confirm-delete-modal');
+        const cancelDelete = document.getElementById('cancel-delete');
+        const confirmDelete = document.getElementById('confirm-delete');
+        const deleteMessage = document.getElementById('delete-message');
+        const deleteWarning = document.getElementById('delete-warning');
+        const toastElement = document.getElementById('toast');
+        const toastMessage = document.getElementById('toast-message');
+        const openSidebarBtn = document.getElementById('open-sidebar');
+        const closeSidebarBtn = document.getElementById('close-sidebar');
+        const sidebar = document.getElementById('sidebar');
+        const teacherEmailDisplay = document.getElementById('teacher-email-display'); // Sidebar için eklendi
+        const studentViewContent = document.getElementById('student-view-content'); // Öğrenci görünümü içeriği için
+        const generateModalQrBtn = document.getElementById('generate-modal-qr-btn'); // Modal QR butonu
+        const modalQrContainer = document.getElementById('modal-qr-container'); // Modal QR alanı
+        const modalQrcodeDiv = document.getElementById('modal-qrcode'); // Modal QR resmi
+        const closeModalQrBtn = document.getElementById('close-modal-qr-btn'); // Modal QR kapat butonu
+        const firebaseStatusSpan = document.getElementById('firebase-status'); // Bağlantı durumu
+
+        // --- App state (localStorage yerine Firebase'den dolacak) ---
+        let students = [];
+        let books = [];
+        let programs = [];
+        let activities = [];
+        let currentUser = null; // Giriş yapmış kullanıcıyı tutar
+        let currentProgramId = null; // Modal için
+        let deleteCallback = null;
+        let deleteItemId = null;
+
+        // Gerçek zamanlı dinleyici referansları (kapatmak için)
+        let unsubscribeStudents = null;
+        let unsubscribeBooks = null;
+        let unsubscribePrograms = null;
+        let unsubscribeActivities = null;
+
+        // Base application URL
+        const baseUrl = window.location.href.split(/[?#]/)[0];
+        const DAYS_OF_WEEK = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+
+        // --- Initialize App ---
+        document.addEventListener('DOMContentLoaded', initialize);
+
+        function initialize() {
+            initDarkMode();
+            setRgbVariables();
+            setupEventListeners();
+
+            // Check URL parameters for student view FIRST
+            const urlParams = new URLSearchParams(window.location.search);
+            const programIdParam = urlParams.get('program');
+            const studentIdParam = urlParams.get('student'); // Bu parametre artık daha az önemli, program ID öncelikli
+            const importDataParam = urlParams.get('data'); // Bu parametre artık çalışmaz (Firebase ile)
+
+            if (programIdParam) {
+                teacherLogin.classList.add('hidden');
+                teacherDashboard.classList.add('hidden');
+                studentView.classList.remove('hidden');
+                showStudentView(programIdParam); // Direkt öğrenci görünümünü yükle
+            } else {
+                 // Firebase Auth durumunu dinle
+                 auth.onAuthStateChanged(user => {
+                     if (user) {
+                         // Kullanıcı giriş yapmış
+                         currentUser = user;
+                         console.log("Kullanıcı giriş yapmış:", currentUser.uid);
+                         if(teacherEmailDisplay) teacherEmailDisplay.textContent = currentUser.email; // E-postayı göster
+                         teacherLogin.classList.add('hidden');
+                         studentView.classList.add('hidden'); // Öğrenci görünümünü gizle (giriş yapmışsa)
+                         teacherDashboard.classList.remove('hidden');
+                         loadInitialDataFromFirebase(); // Verileri yükle ve dinleyicileri başlat
+                     } else {
+                         // Kullanıcı çıkış yapmış veya hiç giriş yapmamış
+                         currentUser = null;
+                         console.log("Kullanıcı giriş yapmamış.");
+                         teacherDashboard.classList.add('hidden');
+                         studentView.classList.add('hidden'); // Öğrenci görünümünü de gizle
+                         teacherLogin.classList.remove('hidden');
+                         // Aktif dinleyicileri durdur
+                         detachRealtimeListeners();
+                     }
+                 });
+            }
+
+             // // Firestore bağlantı durumunu izle (opsiyonel - ŞİMDİLİK DEVRE DIŞI BIRAKILDI, invalid-argument hatası alınıyordu)
+             // db.collection('__dummy__').onSnapshot(() => {
+             //     if(firebaseStatusSpan) firebaseStatusSpan.textContent = 'Bağlı';
+             //     if(firebaseStatusSpan) firebaseStatusSpan.classList.remove('text-red-600', 'dark:text-red-400');
+             //     if(firebaseStatusSpan) firebaseStatusSpan.classList.add('text-green-600', 'dark:text-green-400');
+             // }, error => {
+             //     console.warn("Firestore bağlantı sorunu:", error.code);
+             //     if(firebaseStatusSpan) firebaseStatusSpan.textContent = 'Bağlantı Sorunu';
+             //      if(firebaseStatusSpan) firebaseStatusSpan.classList.remove('text-green-600', 'dark:text-green-400');
+             //     if(firebaseStatusSpan) firebaseStatusSpan.classList.add('text-red-600', 'dark:text-red-400');
+             //     showToast("Veritabanı bağlantısında sorun var.", "warning");
+             // });
+        }
+
+        // --- Firebase Realtime Data Loading ---
+
+        function loadInitialDataFromFirebase() {
+             // Başlangıçta UI'yı temizle/yükleniyor göster
+             students = []; books = []; programs = []; activities = [];
+             showLoadingPlaceholders(); // Listelerde "Yükleniyor..." göster
+
+             // Mevcut dinleyicileri durdur (varsa)
+             detachRealtimeListeners();
+
+             // Yeni dinleyicileri kur
+             setupRealtimeListeners();
+        }
+
+        function setupRealtimeListeners() {
+            if (!auth.currentUser) return; // Giriş yapılmamışsa kurma
+            console.log("Gerçek zamanlı dinleyiciler kuruluyor...");
+
+            // Öğrenciler
+            unsubscribeStudents = db.collection('students').orderBy('name')
+                // DÜZELTİLDİ: Değişken adı ('students') string olarak gönderiliyor
+                .onSnapshot(handleSnapshot('students', refreshStudentsList, 'Öğrenci'), handleSnapshotError("Öğrenci"));
+
+            // Kitaplar
+            unsubscribeBooks = db.collection('books').orderBy('title')
+                 // DÜZELTİLDİ: Değişken adı ('books') string olarak gönderiliyor
+                .onSnapshot(handleSnapshot('books', refreshBooksList, 'Kitap'), handleSnapshotError("Kitap"));
+
+            // Programlar
+            unsubscribePrograms = db.collection('programs').orderBy('date', 'desc')
+                 // DÜZELTİLDİ: Değişken adı ('programs') string olarak gönderiliyor
+                .onSnapshot(handleSnapshot('programs', refreshProgramsRelatedUI, 'Program'), handleSnapshotError("Program"));
+
+            // Aktiviteler
+            unsubscribeActivities = db.collection('activities').orderBy('date', 'desc').limit(20)
+                 // DÜZELTİLDİ: Değişken adı ('activities') string olarak gönderiliyor
+                .onSnapshot(handleSnapshot('activities', refreshRecentActivities, 'Aktivite'), handleSnapshotError("Aktivite"));
+        }
+
+        // Genel Snapshot İşleyici
+        // DÜZELTİLDİ: Fonksiyon artık hedef dizinin ADINI (string) alıyor
+        function handleSnapshot(targetArrayName, uiRefreshCallback, dataType) {
+            return (snapshot) => {
+                console.log(`${dataType} snapshot alındı. Değişiklik sayısı: ${snapshot.docChanges().length}`);
+                try {
+                    // Global değişkeni ADINI kullanarak güncelle
+                    window[targetArrayName] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    // Güncellenen global değişkeni kontrol et (ADINI kullanarak)
+                    console.log(`Global ${targetArrayName} güncellendi:`, window[targetArrayName]); // Artık hata vermemeli
+
+                    if (uiRefreshCallback) {
+                        // console.log(`${dataType} için UI refresh callback (${uiRefreshCallback.name}) çağrılıyor.`); // İsteğe bağlı detaylı log
+                        uiRefreshCallback(); // İlgili UI yenileme fonksiyonunu çağır
+                    } else {
+                         console.warn(`${dataType} için UI refresh callback bulunamadı.`);
+                    }
+                    updateDashboardCounts(); // Her veri değişiminde dashboard sayılarını güncelle
+                } catch (error) {
+                    console.error(`${dataType} snapshot işlenirken hata:`, error);
+                    showToast(`${dataType} verileri işlenirken hata oluştu.`, 'error');
+                }
+            };
+        }
+        // Genel Hata İşleyici
+        function handleSnapshotError(dataType) {
+             return (error) => {
+                 console.error(`${dataType} dinleme hatası:`, error);
+                 showToast(`${dataType} verileri yüklenirken hata.`, "error");
+                 // Gelişmiş hata ayıklama: Hangi koleksiyonda sorun olduğunu göster
+                 if (error.code === 'permission-denied') {
+                    showToast(`${dataType} okuma izni yok. Firestore kurallarını kontrol edin.`, 'error');
+                 }
+             };
+         }
+
+         // Programlar güncellendiğinde ilgili TÜM UI'ları yenileyen fonksiyon
+         function refreshProgramsRelatedUI() {
+              refreshProgramsList();
+              refreshRecentPrograms();
+              refreshCompletionRates();
+              refreshAssignmentCompletionList(document.getElementById('progress-student-filter')?.value || '');
+              refreshProgressCharts(document.getElementById('progress-student-filter')?.value || '');
+
+              // Açık modal varsa güncelle
+              if (!programDetailModal.classList.contains('hidden') && currentProgramId) {
+                  const openProgram = programs.find(p => p.id === currentProgramId);
+                  if (openProgram) {
+                      viewProgram(currentProgramId); // Modal içeriğini yeniden oluştur
+                  } else {
+                      programDetailModal.classList.add('hidden');
+                      showToast("Görüntülenen program silindi.", "info");
+                  }
+              }
+              // Açık öğrenci görünümü varsa güncelle
+               if (!studentView.classList.contains('hidden')) {
+                   const urlParams = new URLSearchParams(window.location.search);
+                   const programIdParam = urlParams.get('program');
+                    if (programIdParam) {
+                        const openProgram = programs.find(p => p.id === programIdParam);
+                        if (openProgram) {
+                            showStudentView(programIdParam); // İçeriği yeniden oluştur
+                        } else {
+                             showStudentView(null); // Hata durumunu göster
+                         }
+                    }
+               }
+          }
+
+
+        function detachRealtimeListeners() {
+            console.log("Gerçek zamanlı dinleyiciler durduruluyor...");
+            if (unsubscribeStudents) unsubscribeStudents();
+            if (unsubscribeBooks) unsubscribeBooks();
+            if (unsubscribePrograms) unsubscribePrograms();
+            if (unsubscribeActivities) unsubscribeActivities();
+            unsubscribeStudents = null;
+            unsubscribeBooks = null;
+            unsubscribePrograms = null;
+            unsubscribeActivities = null;
+        }
+
+        function showLoadingPlaceholders() {
+             const studentsListEl = document.getElementById('students-list');
+             if (studentsListEl) studentsListEl.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500 dark:text-gray-400"><div class="loader mx-auto"></div></td></tr>`;
+             const booksListEl = document.getElementById('books-list');
+             if (booksListEl) booksListEl.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500 dark:text-gray-400"><div class="loader mx-auto"></div></td></tr>`;
+             const programsListEl = document.getElementById('programs-list');
+             if (programsListEl) programsListEl.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500 dark:text-gray-400"><div class="loader mx-auto"></div></td></tr>`;
+             const recentProgramsEl = document.getElementById('recent-programs');
+             if (recentProgramsEl) recentProgramsEl.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500 dark:text-gray-400"><div class="loader mx-auto"></div></td></tr>`;
+             const completionRatesEl = document.getElementById('completion-rates-container');
+             if (completionRatesEl) completionRatesEl.innerHTML = `<div class="text-center py-8 text-gray-500 dark:text-gray-400"><div class="loader mx-auto"></div></div>`;
+             const recentActivitiesEl = document.getElementById('recent-activities');
+             if (recentActivitiesEl) recentActivitiesEl.innerHTML = `<div class="text-center py-8 text-gray-500 dark:text-gray-400"><div class="loader mx-auto"></div></div>`;
+             const progressChartsEl = document.getElementById('progress-charts-container');
+             if (progressChartsEl) progressChartsEl.innerHTML = `<div class="text-center py-8 text-gray-500 dark:text-gray-400 lg:col-span-2"><div class="loader mx-auto"></div></div>`;
+             const assignmentCompletionEl = document.getElementById('assignment-completion-list');
+             if (assignmentCompletionEl) assignmentCompletionEl.innerHTML = `<div class="text-center py-8 text-gray-500 dark:text-gray-400"><div class="loader mx-auto"></div></div>`;
+             // Select'leri de temizle/yükleniyor göster
+             const programStudentEl = document.getElementById('program-student');
+             if (programStudentEl) programStudentEl.innerHTML = '<option>Yükleniyor...</option>';
+             const bookStudentsEl = document.getElementById('book-students');
+             if (bookStudentsEl) bookStudentsEl.innerHTML = '<option>Yükleniyor...</option>';
+             const progressFilterEl = document.getElementById('progress-student-filter');
+             if (progressFilterEl) progressFilterEl.innerHTML = '<option>Yükleniyor...</option>';
+        }
+
+
+        // --- Event Listeners Setup ---
+        function setupEventListeners() {
+            loginBtn?.addEventListener('click', handleLogin);
+            passwordInput?.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
+            logoutBtn?.addEventListener('click', handleLogout);
+            backToLoginStudentBtn?.addEventListener('click', () => { window.location.href = baseUrl; }); // Ana sayfaya dön
+            togglePasswordBtn?.addEventListener('click', () => {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                togglePasswordBtn.querySelector('i').classList.toggle('fa-eye');
+                togglePasswordBtn.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+            toggleThemeLoginBtn?.addEventListener('click', toggleTheme);
+            toggleThemeBtn?.addEventListener('click', toggleTheme);
+            toggleThemeStudentBtn?.addEventListener('click', toggleTheme);
+            openSidebarBtn?.addEventListener('click', () => { sidebar?.classList.remove('-translate-x-full'); });
+            closeSidebarBtn?.addEventListener('click', () => { sidebar?.classList.add('-translate-x-full'); });
+            document.addEventListener('click', (e) => {
+                 // Close sidebar if clicked outside on small screens
+                 if (sidebar && !sidebar.contains(e.target) && openSidebarBtn && !openSidebarBtn.contains(e.target) && window.innerWidth < 640) {
+                    sidebar.classList.add('-translate-x-full');
+                 }
+                 // Close modal if clicked on the background overlay
+                 if (programDetailModal && programDetailModal.contains(e.target) && e.target === programDetailModal) {
+                      programDetailModal.classList.add('hidden');
+                 }
+                 if (confirmDeleteModal && confirmDeleteModal.contains(e.target) && e.target === confirmDeleteModal) {
+                      confirmDeleteModal.classList.add('hidden');
+                 }
+             });
+            navLinks?.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const tabName = link.getAttribute('data-tab');
+                    switchTab(tabName);
+                    // Close sidebar on mobile after clicking a link
+                    if (window.innerWidth < 640) {
+                        sidebar?.classList.add('-translate-x-full');
+                    }
+                });
+             });
+            // Dashboard quick buttons
+            document.querySelectorAll('#dashboard-tab button[data-tab-link]')?.forEach(button => {
+                 button.addEventListener('click', (e) => {
+                     e.preventDefault();
+                     const tabName = button.getAttribute('data-tab-link');
+                     switchTab(tabName);
+                 });
+             });
+              // Dashboard recent programs link
+             document.querySelectorAll('#dashboard-tab a[data-tab-link]')?.forEach(link => {
+                 link.addEventListener('click', (e) => {
+                     e.preventDefault();
+                     const tabName = link.getAttribute('data-tab-link');
+                     switchTab(tabName);
+                 });
+             });
+
+            document.getElementById('add-student-btn')?.addEventListener('click', addStudent);
+            document.getElementById('add-book-btn')?.addEventListener('click', addBook);
+            document.getElementById('create-program-btn')?.addEventListener('click', createProgram);
+            document.getElementById('search-students')?.addEventListener('input', (e) => filterTable('students-list', e.target.value.toLowerCase(), [0, 1]));
+            document.getElementById('search-books')?.addEventListener('input', (e) => filterTable('books-list', e.target.value.toLowerCase(), [0, 1]));
+            document.getElementById('search-programs')?.addEventListener('input', (e) => filterTable('programs-list', e.target.value.toLowerCase(), [1, 2]));
+            document.getElementById('program-student')?.addEventListener('change', (e) => {
+                updateProgramBookSelects(e.target.value);
+                 // Öğrenci seçildiğinde haftalık program alanını etkinleştir
+                 const weeklyScheduleDiv = document.getElementById('weekly-schedule');
+                 if (e.target.value) {
+                     weeklyScheduleDiv?.classList.remove('opacity-50', 'pointer-events-none');
+                     populateWeekDays(e.target.value); // Öğrenciye göre kitapları yükle
+                 } else {
+                     weeklyScheduleDiv?.classList.add('opacity-50', 'pointer-events-none');
+                     if(weeklyScheduleDiv) weeklyScheduleDiv.innerHTML = ''; // Temizle
+                 }
+            });
+            document.querySelectorAll('input[name="program-type"]')?.forEach(radio => { radio.addEventListener('change', toggleTimeInputs); });
+            document.getElementById('progress-student-filter')?.addEventListener('change', (e) => {
+                 refreshAssignmentCompletionList(e.target.value);
+                 refreshProgressCharts(e.target.value);
+            });
+            closeModal?.addEventListener('click', () => programDetailModal?.classList.add('hidden'));
+            closeModalBtn?.addEventListener('click', () => programDetailModal?.classList.add('hidden'));
+            copyLinkBtn?.addEventListener('click', copyProgramLink);
+            // Modal QR Butonları
+             generateModalQrBtn?.addEventListener('click', generateModalQRCode);
+             closeModalQrBtn?.addEventListener('click', () => modalQrContainer?.classList.add('hidden'));
+            cancelDelete?.addEventListener('click', () => confirmDeleteModal?.classList.add('hidden'));
+            confirmDelete?.addEventListener('click', () => {
+                if (deleteCallback && deleteItemId) {
+                    confirmDelete.disabled = true; // Silme sırasında butonu kilitle
+                    confirmDelete.innerHTML = '<div class="loader mx-auto !w-5 !h-5 border-2"></div>';
+                    deleteCallback(deleteItemId)
+                         .catch(err => { // Hata durumunda da modalı kapat ve butonu eski haline getir
+                            console.error("Silme işlemi başarısız:", err);
+                            showToast("Silme işlemi sırasında hata oluştu.", "error");
+                         })
+                         .finally(() => { // Silme işlemi bitince (başarılı/başarısız)
+                             confirmDeleteModal?.classList.add('hidden');
+                             if(deleteWarning) {
+                                 deleteWarning.classList.add('hidden');
+                                 deleteWarning.textContent = '';
+                             }
+                             deleteCallback = null;
+                             deleteItemId = null;
+                             confirmDelete.disabled = false; // Butonu aç
+                             confirmDelete.textContent = 'Sil';
+                         });
+                 } else {
+                     confirmDeleteModal?.classList.add('hidden');
+                     if(deleteWarning) {
+                         deleteWarning.classList.add('hidden');
+                         deleteWarning.textContent = '';
+                     }
+                 }
+            });
+        }
+
+        // --- Authentication ---
+        function handleLogin() {
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            if (!email || !password) {
+                showToast('Lütfen e-posta ve şifre girin', 'warning');
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<div class="loader mx-auto !border-2 !w-6 !h-6"></div>';
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    console.log("Giriş başarılı (signInWithEmailAndPassword)");
+                })
+                .catch((error) => {
+                    console.error("Giriş Hatası:", error);
+                    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                         showToast('E-posta veya şifre hatalı', 'error');
+                     } else if (error.code === 'auth/invalid-email'){
+                         showToast('Geçersiz e-posta formatı', 'error');
+                     } else {
+                         showToast(`Giriş hatası: ${error.message}`, 'error');
+                     }
+                })
+                .finally(() => {
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = 'Giriş Yap';
+                    if (passwordInput) passwordInput.value = ''; // Şifre alanını temizle
+                });
+        }
+
+        function handleLogout() {
+             logoutBtn.disabled = true;
+             logoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin w-5"></i><span class="ml-3">Çıkış Yapılıyor...</span>';
+             auth.signOut().then(() => {
+                 console.log("Çıkış yapıldı (signOut)");
+                 showToast("Başarıyla çıkış yapıldı", "info");
+             }).catch((error) => {
+                 console.error("Çıkış Hatası:", error);
+                 showToast(`Çıkış sırasında hata: ${error.message}`, 'error');
+             }).finally(() => {
+                  logoutBtn.disabled = false;
+                  logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt w-5"></i><span class="ml-3">Çıkış Yap</span>';
+             });
+         }
+
+
+        // --- Data Operations (Firebase) ---
+
+        function addStudent() {
+            const nameInput = document.getElementById('student-name');
+            const classInput = document.getElementById('student-class');
+            const name = nameInput?.value.trim();
+            const studentClass = classInput?.value.trim();
+            const addBtn = document.getElementById('add-student-btn');
+
+            if (!name) { showToast('Lütfen öğrenci adını girin', 'warning'); return; }
+            if (!addBtn) return;
+
+            addBtn.disabled = true;
+            addBtn.innerHTML = '<div class="loader mx-auto !border-2 !w-5 !h-5"></div>';
+
+            db.collection('students').add({
+                name: name,
+                class: studentClass || 'Belirtilmedi',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .then((docRef) => {
+                showToast('Öğrenci başarıyla eklendi');
+                if(nameInput) nameInput.value = '';
+                if(classInput) classInput.value = '';
+                addActivityToFirebase(`Yeni öğrenci eklendi: ${name} (${studentClass || 'Belirtilmedi'})`, 'success');
+            })
+            .catch((error) => {
+                console.error("Öğrenci ekleme hatası: ", error);
+                showToast(`Öğrenci eklenirken hata: ${error.message}`, 'error');
+                 if (error.code === 'permission-denied') {
+                    showToast('Öğrenci ekleme izniniz yok.', 'error');
+                 }
+            })
+            .finally(() => {
+                addBtn.disabled = false;
+                addBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>Ekle';
+            });
+        }
+
+        function addBook() {
+            const titleInput = document.getElementById('book-title');
+            const authorInput = document.getElementById('book-author');
+            const studentSelect = document.getElementById('book-students');
+            const title = titleInput?.value.trim();
+            const author = authorInput?.value.trim();
+            const selectedStudentIds = studentSelect ? Array.from(studentSelect.selectedOptions).map(option => option.value) : [];
+            const addBtn = document.getElementById('add-book-btn');
+
+            if (!title) { showToast('Lütfen kitap adını girin', 'warning'); return; }
+            if (!addBtn) return;
+
+            addBtn.disabled = true;
+            addBtn.innerHTML = '<div class="loader mx-auto !border-2 !w-5 !h-5"></div>';
+
+            db.collection('books').add({
+                title: title,
+                author: author || 'Yazar Yok',
+                studentIds: selectedStudentIds,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .then(() => {
+                showToast('Kitap başarıyla eklendi');
+                if(titleInput) titleInput.value = '';
+                if(authorInput) authorInput.value = '';
+                if(studentSelect) studentSelect.selectedIndex = -1;
+                 const studentNames = selectedStudentIds
+                     .map(id => students.find(s => s.id === id)?.name)
+                     .filter(Boolean).join(', ');
+                 const activityMsg = selectedStudentIds.length > 0
+                     ? `Yeni kitap: ${title}${author ? ' ('+author+')' : ''} (${studentNames})`
+                     : `Yeni kitap: ${title}${author ? ' ('+author+')' : ''} (Genel)`;
+                addActivityToFirebase(activityMsg, 'success');
+            })
+            .catch((error) => {
+                console.error("Kitap ekleme hatası: ", error);
+                showToast(`Kitap eklenirken hata: ${error.message}`, 'error');
+                 if (error.code === 'permission-denied') {
+                    showToast('Kitap ekleme izniniz yok.', 'error');
+                 }
+            })
+            .finally(() => {
+                addBtn.disabled = false;
+                addBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>Ekle';
+            });
+        }
+
+        function createProgram() {
+            const studentSelect = document.getElementById('program-student');
+            const titleInput = document.getElementById('program-title');
+            const isTimed = document.querySelector('input[name="program-type"]:checked')?.value === 'timed';
+            const studentId = studentSelect?.value;
+            const title = titleInput?.value.trim();
+            const createBtn = document.getElementById('create-program-btn');
+
+            if (!studentId) { showToast('Lütfen bir öğrenci seçin', 'warning'); return; }
+            if (!title) { showToast('Lütfen program başlığı girin', 'warning'); return; }
+            if (!createBtn) return;
+
+            const weeklyScheduleContainer = document.getElementById('weekly-schedule');
+            if (!weeklyScheduleContainer) { showToast('Haftalık program alanı bulunamadı.', 'error'); return; }
+
+            const dayEntries = weeklyScheduleContainer.querySelectorAll('.card');
+            const schedule = [];
+            let totalAssignments = 0;
+            let invalidAssignmentFound = false;
+
+            dayEntries.forEach((dayEntry, index) => {
+                const assignments = [];
+                const assignmentElements = dayEntry.querySelectorAll('.assignment');
+                assignmentElements.forEach(assignmentEl => {
+                    const bookId = assignmentEl.querySelector('.book-select')?.value;
+                    const pages = assignmentEl.querySelector('.pages-input')?.value.trim();
+                    let startTime = null, endTime = null;
+                    if (isTimed) {
+                        startTime = assignmentEl.querySelector('.start-time-input')?.value || null;
+                        endTime = assignmentEl.querySelector('.end-time-input')?.value || null;
+                    }
+
+                    // Sadece hem kitap hem sayfa varsa geçerli kabul et
+                    if (bookId && pages) {
+                        const studentBooks = getBooksForStudent(studentId);
+                        const book = studentBooks.find(b => b.id === bookId);
+                        const assignmentData = {
+                            bookId,
+                            bookTitle: book ? book.title : 'Kitap Bulunamadı',
+                            pages,
+                            completed: false,
+                            startTime: isTimed ? startTime : null, // Sadece zamanlı ise ekle
+                            endTime: isTimed ? endTime : null    // Sadece zamanlı ise ekle
+                        };
+                        assignments.push(assignmentData);
+                        totalAssignments++;
+                    } else if (bookId || pages || (isTimed && (startTime || endTime))) {
+                        // Eğer alanlardan herhangi biri dolu ama hepsi değilse (kitap+sayfa zorunlu), bu geçersiz satır
+                        invalidAssignmentFound = true;
+                    }
+                });
+                schedule.push({ day: DAYS_OF_WEEK[index], assignments });
+            });
+
+            if (invalidAssignmentFound) {
+                showToast('Lütfen tüm ödev satırlarında hem Kitap hem de Sayfa alanlarını doldurun veya boş bırakın.', 'warning');
+                return;
+            }
+            if (totalAssignments === 0) { showToast('Programa en az bir geçerli ödev (Kitap + Sayfa) eklemelisiniz.', 'warning'); return; }
+
+            createBtn.disabled = true;
+            createBtn.innerHTML = '<div class="loader mx-auto !border-2 !w-5 !h-5"></div>';
+
+            const student = students.find(s => s.id === studentId);
+            const newProgramData = {
+                studentId: studentId,
+                studentName: student ? student.name : 'Bilinmeyen Öğrenci',
+                title: title,
+                date: firebase.firestore.FieldValue.serverTimestamp(), // Sunucu zamanını kullan
+                isTimed: isTimed,
+                schedule: schedule
+            };
+
+            db.collection('programs').add(newProgramData)
+                .then((docRef) => {
+                     showToast('Program başarıyla oluşturuldu');
+                     addActivityToFirebase(`Yeni ${isTimed ? 'saatli' : 'saatsiz'} program: ${title} (${student ? student.name : '??'})`, 'success');
+                     // Formu temizle
+                     if(studentSelect) studentSelect.value = '';
+                     if(titleInput) titleInput.value = '';
+                      const untimedRadio = document.querySelector('input[name="program-type"][value="untimed"]');
+                      if (untimedRadio) untimedRadio.checked = true;
+                      toggleTimeInputs(); // Zaman girdilerini gizle
+                      weeklyScheduleContainer.classList.add('opacity-50', 'pointer-events-none');
+                      weeklyScheduleContainer.innerHTML = ''; // Haftayı sıfırla
+                     // Yeni programın detayını göster (opsiyonel)
+                     viewProgram(docRef.id); // ID'yi alıp göster
+                })
+                .catch(error => {
+                     console.error("Program oluşturma hatası:", error);
+                     showToast(`Program oluşturulurken hata: ${error.message}`, 'error');
+                     if (error.code === 'permission-denied') {
+                        showToast('Program oluşturma izniniz yok.', 'error');
+                     }
+                 })
+                .finally(() => {
+                     createBtn.disabled = false;
+                     createBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Programı Oluştur';
+                 });
+        }
+
+
+        // Silme işlemleri şimdi Promise döndürüyor (confirmDelete'in finally bloğu için)
+        function deleteStudent(studentIdToDelete) {
+             console.log(`Öğrenci siliniyor: ${studentIdToDelete}`);
+             const studentDocRef = db.collection('students').doc(studentIdToDelete);
+             const studentName = students.find(s => s.id === studentIdToDelete)?.name || 'Bilinmeyen Öğrenci';
+
+             // Öğrenciyi silme Promise'i
+             const deleteStudentPromise = studentDocRef.delete();
+
+             // İlgili programları silme Promise'i
+             const deleteProgramsPromise = db.collection('programs').where('studentId', '==', studentIdToDelete).get()
+                 .then(snapshot => {
+                     if (snapshot.empty) {
+                         return Promise.resolve(); // Silinecek program yok
+                     }
+                     const batch = db.batch();
+                     let count = 0;
+                     snapshot.forEach(doc => {
+                         batch.delete(doc.ref);
+                         count++;
+                     });
+                     console.log(`${count} program silinmek üzere işaretlendi.`);
+                     return batch.commit();
+                 });
+
+              // Tüm silme işlemleri bittiğinde
+              return Promise.all([deleteStudentPromise, deleteProgramsPromise])
+                 .then(() => {
+                     showToast(`Öğrenci "${studentName}" ve ilgili programları silindi.`);
+                     addActivityToFirebase(`Öğrenci silindi: ${studentName} (programlarıyla)`, 'warning');
+                 })
+                 .catch((error) => {
+                     console.error("Öğrenci veya program silme hatası: ", error);
+                     showToast('Öğrenci veya programları silinirken hata oluştu', 'error');
+                      if (error.code === 'permission-denied') {
+                         showToast('Silme işlemi için izniniz yok.', 'error');
+                      }
+                      throw error; // Hatayı yukarıya ilet ki finally çalışsın
+                 });
+         }
+
+         function deleteBook(bookIdToDelete) {
+              console.log(`Kitap siliniyor: ${bookIdToDelete}`);
+              const bookDocRef = db.collection('books').doc(bookIdToDelete);
+              const bookTitle = books.find(b => b.id === bookIdToDelete)?.title || 'Bilinmeyen Kitap';
+
+              return bookDocRef.delete()
+                  .then(() => {
+                      showToast(`Kitap "${bookTitle}" silindi.`);
+                      addActivityToFirebase(`Kitap silindi: ${bookTitle}`, 'warning');
+                  })
+                  .catch((error) => {
+                      console.error("Kitap silme hatası: ", error);
+                      showToast('Kitap silinirken hata oluştu', 'error');
+                       if (error.code === 'permission-denied') {
+                          showToast('Kitap silme izniniz yok.', 'error');
+                       }
+                       throw error;
+                  });
+          }
+
+          function deleteProgram(programIdToDelete) {
+               console.log(`Program siliniyor: ${programIdToDelete}`);
+               const programDocRef = db.collection('programs').doc(programIdToDelete);
+               const programInfo = programs.find(p => p.id === programIdToDelete);
+               const infoText = programInfo ? `${programInfo.title} - ${programInfo.studentName}` : 'Bilinmeyen Program';
+
+               return programDocRef.delete()
+                   .then(() => {
+                       showToast('Program silindi.');
+                       addActivityToFirebase(`Program silindi: ${infoText}`, 'warning');
+                   })
+                   .catch((error) => {
+                       console.error("Program silme hatası: ", error);
+                       showToast('Program silinirken hata oluştu', 'error');
+                        if (error.code === 'permission-denied') {
+                           showToast('Program silme izniniz yok.', 'error');
+                        }
+                        throw error;
+                   });
+           }
+
+
+        // --- Data Update (Assignment Completion) ---
+        function toggleAssignmentCompletionFirebase(checkboxElement, programId) {
+            if (!checkboxElement) return;
+            const day = checkboxElement.getAttribute('data-day');
+            const index = parseInt(checkboxElement.getAttribute('data-index'));
+            if (day === null || isNaN(index)) {
+                console.error("Checkbox data attributes missing or invalid", checkboxElement);
+                return;
+            }
+
+            const programDocRef = db.collection('programs').doc(programId);
+
+            const isCompleted = !checkboxElement.classList.contains('checked'); // Yeni durum
+
+            checkboxElement.style.opacity = '0.5';
+            checkboxElement.style.pointerEvents = 'none';
+
+            programDocRef.get().then(doc => {
+                if (!doc.exists) throw new Error("Program bulunamadı!");
+
+                const programData = doc.data();
+                const newSchedule = JSON.parse(JSON.stringify(programData.schedule || [])); // Varsa kopyala, yoksa boş dizi
+                const daySchedule = newSchedule.find(d => d.day === day);
+
+                if (daySchedule && daySchedule.assignments && daySchedule.assignments[index] !== undefined) {
+                    const assignment = daySchedule.assignments[index];
+                    assignment.completed = isCompleted;
+
+                    return programDocRef.update({ schedule: newSchedule });
+                } else {
+                    console.error("Güncellenecek ödev bulunamadı. Day:", day, "Index:", index, "Schedule:", newSchedule);
+                    throw new Error("Ödev bulunamadı veya program yapısı bozuk.");
+                }
+            })
+            .then(() => {
+                console.log("Ödev durumu Firestore'da güncellendi.");
+                 const program = window.programs.find(p => p.id === programId);
+                 if(program) {
+                     const dayData = program.schedule?.find(d => d.day === day);
+                     if (dayData?.assignments?.[index]) {
+                          const assignment = dayData.assignments[index];
+                          const activityMsg = `${program.studentName}: "${assignment.bookTitle}" (${assignment.pages}) ödevini ${isCompleted ? 'tamamladı' : 'tamamlanmadı olarak işaretledi'}.`;
+                          addActivityToFirebase(activityMsg, isCompleted ? 'completion' : 'uncompletion');
+                      } else {
+                           const activityMsg = `Bir ödev ${isCompleted ? 'tamamlandı' : 'tamamlanmadı olarak işaretlendi'} (Program: ${programId}, Gün: ${day}, Index: ${index}).`;
+                           addActivityToFirebase(activityMsg, isCompleted ? 'completion' : 'uncompletion');
+                      }
+                  } else {
+                      console.warn("Aktivite logu için program bulunamadı:", programId);
+                  }
+            })
+            .catch(error => {
+                console.error("Ödev durumu güncellenirken hata: ", error);
+                showToast(`Ödev durumu güncellenirken hata: ${error.message}`, "error");
+                if (error.code === 'permission-denied') {
+                   showToast('Ödev güncelleme izniniz yok.', 'error');
+                }
+                // Hata durumunda onSnapshot'ın UI'ı düzeltmesini bekle
+            })
+            .finally(() => {
+                // Kilidi kaldır (onSnapshot güncellemesinden sonra UI zaten düzelir)
+                if (checkboxElement) {
+                    checkboxElement.style.opacity = '1';
+                    checkboxElement.style.pointerEvents = 'auto';
+                }
+            });
+        }
+
+        // --- Activity Logging ---
+        function addActivityToFirebase(message, type = 'info') {
+            if (!message) return;
+            console.log("Aktivite ekleniyor:", message);
+            db.collection('activities').add({
+                message: message,
+                type: type,
+                date: firebase.firestore.FieldValue.serverTimestamp(),
+                userId: auth.currentUser ? auth.currentUser.uid : null
+            }).catch(error => {
+                console.error("Aktivite kaydı hatası:", error);
+                // Aktivite ekleme hatası genellikle kritik değildir, kullanıcıya göstermeyebiliriz.
+                 if (error.code === 'permission-denied') {
+                    console.warn('Aktivite ekleme izni yok.');
+                 }
+            });
+        }
+
+
+        // --- UI Refresh Functions (Firebase'den gelen veriye göre çalışır) ---
+
+        function refreshStudentsList() {
+             const studentsList = document.getElementById('students-list');
+             if (!studentsList) return;
+             studentsList.innerHTML = ''; // Önce temizle
+
+             // Global `students` dizisini kullan
+             if (students.length === 0) {
+                 studentsList.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500 dark:text-gray-400">Henüz öğrenci eklenmemiş</td></tr>`;
+                 populateStudentSelect(); // Select'leri boşalt veya "öğrenci yok" ekle
+                 populateBookStudentSelect();
+                 populateStudentProgressFilter();
+                 return;
+             }
+
+             students.forEach(student => {
+                 const studentPrograms = programs.filter(p => p.studentId === student.id);
+                 const completionStats = calculateStudentCompletionStats(student.id);
+                 const row = document.createElement('tr');
+                 row.className = 'hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors';
+                 row.innerHTML = `
+                     <td class="whitespace-nowrap py-3"> <div class="flex items-center"> <div class="avatar mr-3" style="background-color: ${stringToColor(student.name)}">${student.name.charAt(0).toUpperCase()}</div> <div> <div class="font-medium text-gray-800 dark:text-white">${student.name}</div> </div> </div> </td>
+                     <td class="whitespace-nowrap py-3 text-sm text-gray-600 dark:text-gray-300">${student.class || 'Yok'}</td>
+                     <td class="whitespace-nowrap py-3 text-sm text-center"> <span class="px-2 py-1 text-xs font-semibold rounded-full ${studentPrograms.length > 0 ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'}">${studentPrograms.length}</span> </td>
+                     <td class="whitespace-nowrap py-3"> <div class="flex flex-col"> <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">${completionStats.completed}/${completionStats.total} (${completionStats.percentage}%)</div> <div class="progress-container h-2 w-32 rounded-full"> <div class="progress-bar rounded-full" style="width: ${completionStats.percentage}%"></div> </div> </div> </td>
+                     <td class="whitespace-nowrap py-3 text-sm space-x-2">
+                         <button class="view-student-programs action-btn action-btn-view touch-target" data-id="${student.id}" title="Programları Görüntüle"> <i class="fas fa-calendar-alt"></i> </button>
+                         <button class="delete-student action-btn action-btn-delete touch-target" data-id="${student.id}" title="Öğrenciyi Sil"> <i class="fas fa-trash-alt"></i> </button>
+                     </td>
+                 `;
+                 studentsList.appendChild(row);
+                 // Event listeners
+                 row.querySelector('.view-student-programs')?.addEventListener('click', () => viewStudentPrograms(student.id));
+                 row.querySelector('.delete-student')?.addEventListener('click', () => confirmDeleteItem('öğrenciyi', deleteStudent, student.id, `Bu öğrenciye ait (${studentPrograms.length}) program da silinecektir.`));
+             });
+             // Select'leri de güncelle
+             populateStudentSelect();
+             populateBookStudentSelect();
+             populateStudentProgressFilter();
+        }
+
+        function refreshBooksList() {
+            console.log("refreshBooksList fonksiyonu ÇAĞRILDI"); // <-- Bu satırı ekle
+            const booksList = document.getElementById('books-list');
+           
+             if (!booksList) return;
+            booksList.innerHTML = ''; // Önce temizle
+
+            // Global `books` dizisini kullan
+            if (books.length === 0) {
+                booksList.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500 dark:text-gray-400">Henüz kitap eklenmemiş</td></tr>`;
+                updateProgramBookSelects(document.getElementById('program-student')?.value); // Kitap select'lerini boşalt
+                return;
+            }
+
+             books.forEach(book => {
+                 const assignedStudentNames = (book.studentIds || [])
+                     .map(id => students.find(s => s.id === id)?.name)
+                     .filter(Boolean).join(', ') || 'Kimseye Atanmamış';
+                 let usageCount = 0;
+                 programs.forEach(program => {
+                    program.schedule?.forEach(day => {
+                        usageCount += day.assignments?.filter(a => a.bookId === book.id).length || 0;
+                    });
+                 });
+                 const row = document.createElement('tr');
+                 row.className = 'hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors';
+                 row.innerHTML = `
+                     <td class="whitespace-nowrap py-3"> <div class="font-medium text-gray-800 dark:text-white">${book.title}</div> </td>
+                     <td class="whitespace-nowrap py-3 text-sm text-gray-600 dark:text-gray-300">${book.author || 'Yok'}</td>
+                     <td class="whitespace-nowrap py-3 text-xs text-gray-500 dark:text-gray-400"> <span class="block mb-1" title="${assignedStudentNames}"> ${(book.studentIds || []).length > 0 ? `${book.studentIds.length} Öğrenciye Atanmış` : 'Genel Kitap'} </span> <span class="px-2 py-0.5 text-[0.7rem] font-semibold rounded-full ${usageCount > 0 ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'}"> ${usageCount} Programda </span> </td>
+                     <td class="whitespace-nowrap py-3 text-sm space-x-2">
+                         <button class="delete-book action-btn action-btn-delete touch-target" data-id="${book.id}" title="Kitabı Sil"> <i class="fas fa-trash-alt"></i> </button>
+                     </td>
+                 `;
+                 booksList.appendChild(row);
+                 const deleteBtn = row.querySelector('.delete-book');
+                  deleteBtn?.addEventListener('click', () => {
+                      const warningMsg = usageCount > 0 ? `Bu kitap ${usageCount} programda kullanılıyor. Silme işlemi programlardaki ilgili ödevleri etkilemez ama referanslar kalır.` : '';
+                      confirmDeleteItem('kitabı', deleteBook, book.id, warningMsg);
+                  });
+             });
+              // Program formundaki kitap listesini güncelle (mevcut öğrenciye göre)
+              updateProgramBookSelects(document.getElementById('program-student')?.value);
+        }
+
+        function refreshProgramsList() {
+             const programsList = document.getElementById('programs-list');
+             if (!programsList) return;
+             programsList.innerHTML = ''; // Önce temizle
+
+             // Global `programs` dizisini kullan
+             if (programs.length === 0) {
+                 programsList.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500 dark:text-gray-400">Henüz program oluşturulmamış</td></tr>`;
+                 return;
+             }
+
+             programs.forEach(program => {
+                 const programDate = program.date?.toDate ? program.date.toDate() : new Date();
+                 const dateStr = programDate.toLocaleDateString('tr-TR');
+                 const completionStats = calculateProgramCompletionStats(program.id);
+                 const programType = program.isTimed ? 'Saatli' : 'Saatsiz';
+                 const row = document.createElement('tr');
+                 row.className = 'hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors';
+                 row.innerHTML = `
+                     <td class="whitespace-nowrap py-3 text-sm text-gray-600 dark:text-gray-300">${dateStr}</td>
+                     <td class="whitespace-nowrap py-3 text-sm"> <div class="font-medium text-gray-800 dark:text-white">${program.studentName || 'Bilinmiyor'}</div> </td>
+                     <td class="whitespace-nowrap py-3 text-sm text-gray-700 dark:text-gray-300"> ${program.title} <span class="text-xs ml-1 px-1.5 py-0.5 rounded ${program.isTimed ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200'}">${programType}</span> </td>
+                     <td class="whitespace-nowrap py-3"> <div class="flex flex-col"> <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">${completionStats.completed}/${completionStats.total} (${completionStats.percentage}%)</div> <div class="progress-container h-2 w-32 rounded-full"> <div class="progress-bar rounded-full" style="width: ${completionStats.percentage}%"></div> </div> </div> </td>
+                     <td class="whitespace-nowrap py-3 text-sm space-x-2">
+                         <button class="view-program action-btn action-btn-view touch-target" data-id="${program.id}" title="Programı Görüntüle"> <i class="fas fa-eye"></i> </button>
+                         <button class="delete-program action-btn action-btn-delete touch-target" data-id="${program.id}" title="Programı Sil"> <i class="fas fa-trash-alt"></i> </button>
+                     </td>
+                 `;
+                 programsList.appendChild(row);
+                 row.querySelector('.view-program')?.addEventListener('click', () => viewProgram(program.id));
+                 row.querySelector('.delete-program')?.addEventListener('click', () => confirmDeleteItem('programı', deleteProgram, program.id));
+             });
+        }
+
+        function refreshRecentPrograms() {
+            const recentProgramsBody = document.getElementById('recent-programs');
+            if (!recentProgramsBody) return;
+            recentProgramsBody.innerHTML = '';
+
+            // Global `programs` dizisini kullan
+            if (programs.length === 0) {
+                recentProgramsBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500 dark:text-gray-400">Henüz program oluşturulmamış</td></tr>`;
+                return;
+            }
+
+            const recentProgramsList = programs.slice(0, 5); // Global programlardan ilk 5'i al
+
+            recentProgramsList.forEach(program => {
+                 const programDate = program.date?.toDate ? program.date.toDate() : new Date();
+                 const dateStr = programDate.toLocaleDateString('tr-TR');
+                const completionStats = calculateProgramCompletionStats(program.id);
+                const row = document.createElement('tr');
+                 row.className = 'hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors';
+                 row.innerHTML = `
+                     <td class="whitespace-nowrap py-3 text-sm text-gray-600 dark:text-gray-300">${dateStr}</td>
+                     <td class="whitespace-nowrap py-3 text-sm"> <div class="font-medium text-gray-800 dark:text-white">${program.studentName || 'Bilinmiyor'}</div> </td>
+                     <td class="whitespace-nowrap py-3 text-sm text-gray-700 dark:text-gray-300">${program.title}</td>
+                     <td class="whitespace-nowrap py-3"> <div class="flex flex-col"> <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">${completionStats.completed}/${completionStats.total} (${completionStats.percentage}%)</div> <div class="progress-container h-2 w-32 rounded-full"> <div class="progress-bar rounded-full" style="width: ${completionStats.percentage}%"></div> </div> </div> </td>
+                     <td class="whitespace-nowrap py-3 text-sm"> <button class="view-program action-btn action-btn-view touch-target" data-id="${program.id}" title="Programı Görüntüle"> <i class="fas fa-eye"></i> </button> </td>
+                 `;
+                 recentProgramsBody.appendChild(row);
+                 row.querySelector('.view-program')?.addEventListener('click', () => viewProgram(program.id));
+             });
+        }
+
+        function refreshCompletionRates() {
+             const completionRatesContainer = document.getElementById('completion-rates-container');
+             if (!completionRatesContainer) return;
+
+             let totalAssignmentsOverall = 0;
+             programs.forEach(p => {
+                p.schedule?.forEach(d => { totalAssignmentsOverall += d.assignments?.length || 0; });
+             });
+
+             if (totalAssignmentsOverall === 0) {
+                 completionRatesContainer.innerHTML = `<div class="text-center py-8 text-gray-500 dark:text-gray-400">Henüz ödev içeren program yok.</div>`;
+                 return;
+             }
+
+             const studentStats = students.map(student => {
+                  const stats = calculateStudentCompletionStats(student.id);
+                  if (stats.total === 0) return null; // Ödevi olmayanları listede gösterme
+                  return { name: student.name, ...stats };
+              }).filter(Boolean); // null olanları çıkar
+
+             if (studentStats.length === 0) {
+                  completionRatesContainer.innerHTML = `<div class="text-center py-8 text-gray-500 dark:text-gray-400">Öğrencilere atanmış ödev bulunmuyor.</div>`;
+                  return;
+             }
+
+             completionRatesContainer.innerHTML = studentStats.map(stat => `
+                <div class="flex items-center mb-4">
+                    <div class="avatar mr-3 text-sm w-8 h-8" style="background-color: ${stringToColor(stat.name)}">${stat.name.charAt(0).toUpperCase()}</div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-sm font-medium text-gray-800 dark:text-white">${stat.name}</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">${stat.completed}/${stat.total} (${stat.percentage}%)</span>
+                        </div>
+                        <div class="progress-container h-2">
+                            <div class="progress-bar" style="width: ${stat.percentage}%"></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function refreshRecentActivities() {
+             const recentActivitiesEl = document.getElementById('recent-activities');
+             if (!recentActivitiesEl) return;
+
+             // Global `activities` dizisini kullan
+             if (activities.length === 0) {
+                 recentActivitiesEl.innerHTML = `<div class="text-center py-8 text-gray-500 dark:text-gray-400">Henüz aktivite bulunmuyor</div>`;
+                 return;
+             }
+
+             recentActivitiesEl.innerHTML = activities.map(activity => {
+                 const activityDate = activity.date?.toDate ? activity.date.toDate() : new Date();
+                 const timeStr = activityDate.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+                 const dateStr = activityDate.toLocaleDateString('tr-TR');
+                 let iconClass = 'fas fa-info-circle text-blue-500'; let textColor = 'text-gray-700 dark:text-gray-300';
+
+                 if (activity.type === 'success') iconClass = 'fas fa-check-circle text-green-500';
+                 else if (activity.type === 'warning') iconClass = 'fas fa-exclamation-triangle text-yellow-500';
+                 else if (activity.type === 'error') { iconClass = 'fas fa-times-circle text-red-500'; textColor = 'text-red-700 dark:text-red-400'; }
+                 else if (activity.type === 'completion') iconClass = 'fas fa-check text-green-600';
+                 else if (activity.type === 'uncompletion') iconClass = 'fas fa-undo text-yellow-600';
+
+                 return `
+                     <div class="py-3 flex items-start"> <div class="flex-shrink-0 mt-1 px-1"> <i class="${iconClass}"></i> </div> <div class="ml-2 flex-1"> <p class="text-sm ${textColor}">${activity.message}</p> <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${dateStr} ${timeStr}</p> </div> </div>
+                 `;
+              }).join('');
+        }
+
+        function refreshAssignmentCompletionList(filterStudentId = '') {
+            const listEl = document.getElementById('assignment-completion-list');
+            if (!listEl) return;
+
+             let completedAssignments = [];
+             programs.forEach(program => {
+                if (filterStudentId && program.studentId !== filterStudentId) return; // Filtrele
+                const programDate = program.date?.toDate ? program.date.toDate() : new Date();
+                program.schedule?.forEach(day => {
+                    day.assignments?.forEach((assignment, index) => {
+                        if (assignment.completed) {
+                             completedAssignments.push({
+                                 studentName: program.studentName || 'Bilinmiyor',
+                                 programTitle: program.title,
+                                 programId: program.id,
+                                 bookTitle: assignment.bookTitle || 'Kitap Yok',
+                                 pages: assignment.pages || '?',
+                                 day: day.day,
+                                 date: programDate
+                             });
+                         }
+                    });
+                 });
+             });
+             completedAssignments.sort((a, b) => b.date - a.date); // Tarihe göre sırala (en yeni üste)
+
+            if (completedAssignments.length === 0) {
+                listEl.innerHTML = `<div class="text-center py-8 text-gray-500 dark:text-gray-400">${filterStudentId ? 'Seçili öğrenci için tamamlanmış ödev yok.' : 'Henüz tamamlanmış ödev yok.'}</div>`;
+                return;
+            }
+
+            listEl.innerHTML = completedAssignments.map(assignment => `
+                <div class="p-3 bg-gray-50 dark:bg-gray-750 rounded-lg flex items-center justify-between mb-2">
+                    <div>
+                        <p class="text-sm font-medium text-gray-800 dark:text-white">${assignment.studentName}: ${assignment.bookTitle} (${assignment.pages})</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Program: ${assignment.programTitle} - ${assignment.day} (${assignment.date.toLocaleDateString('tr-TR')})</p>
+                    </div>
+                    <button class="view-program action-btn action-btn-view btn-sm touch-target" data-id="${assignment.programId}" title="Programı Görüntüle">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            `).join('');
+             // Listener'ları ekle
+             listEl.querySelectorAll('.view-program').forEach(button => {
+                button.addEventListener('click', () => viewProgram(button.getAttribute('data-id')));
+             });
+        }
+
+        function refreshProgressCharts(filterStudentId = '') {
+             const container = document.getElementById('progress-charts-container');
+             if (!container) return;
+
+             const studentsToDisplay = filterStudentId ? students.filter(s => s.id === filterStudentId) : students;
+
+             if (studentsToDisplay.length === 0 && filterStudentId) {
+                  container.innerHTML = `<div class="text-center py-8 text-gray-500 dark:text-gray-400 lg:col-span-2">Seçilen öğrenci bulunamadı veya hiç ödevi yok.</div>`;
+                  return;
+             }
+             if (studentsToDisplay.length === 0 && !filterStudentId) {
+                  container.innerHTML = `<div class="text-center py-8 text-gray-500 dark:text-gray-400 lg:col-span-2">Henüz öğrenci veya ödev verisi yok.</div>`;
+                  return;
+             }
+
+             const studentData = studentsToDisplay.map(student => {
+                 const stats = calculateStudentCompletionStats(student.id);
+                 if (stats.total === 0) return null; // Ödevi olmayanları grafikte gösterme
+
+                 const studentPrograms = programs.filter(p => p.studentId === student.id);
+                 const dailyCompletion = DAYS_OF_WEEK.map(dayName => {
+                     let dayTotal = 0;
+                     let dayCompleted = 0;
+                     studentPrograms.forEach(p => {
+                         const daySchedule = p.schedule?.find(d => d.day === dayName);
+                         if (daySchedule) {
+                             dayTotal += daySchedule.assignments?.length || 0;
+                             dayCompleted += daySchedule.assignments?.filter(a => a.completed).length || 0;
+                         }
+                     });
+                     // Bar yüksekliği 0 olunca görünmesi için min %2
+                     const percentage = dayTotal > 0 ? Math.max(2, Math.round((dayCompleted / dayTotal) * 100)) : 2;
+                     return { day: dayName, percentage: percentage };
+                 });
+
+                 return { name: student.name, overallStats: stats, dailyStats: dailyCompletion };
+             }).filter(Boolean); // null olanları çıkar
+
+             if (studentData.length === 0) {
+                  container.innerHTML = `<div class="text-center py-8 text-gray-500 dark:text-gray-400 lg:col-span-2">${filterStudentId ? 'Seçilen öğrencinin henüz ödevi yok.' : 'Henüz ödevi olan öğrenci yok.'}</div>`;
+                  return;
+             }
+
+             container.innerHTML = studentData.map(student => `
+                <div class="card p-6">
+                    <h4 class="text-base font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
+                        <div class="avatar mr-2 text-xs w-6 h-6" style="background-color: ${stringToColor(student.name)}">${student.name.charAt(0).toUpperCase()}</div>
+                        ${student.name} - Genel İlerleme
+                    </h4>
+                    <div class="flex items-center mb-4">
+                        <div class="text-3xl font-bold mr-2">${student.overallStats.percentage}%</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">(${student.overallStats.completed}/${student.overallStats.total} ödev)</div>
+                    </div>
+                    <div class="progress-container h-3 mb-6">
+                        <div class="progress-bar" style="width: ${student.overallStats.percentage}%"></div>
+                    </div>
+                    <h5 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Günlük Tamamlama Oranları (%)</h5>
+                    <div class="flex justify-between items-end space-x-1 h-24">
+                        ${student.dailyStats.map(dayStat => `
+                            <div class="flex flex-col items-center w-full">
+                                <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-t-md overflow-hidden flex items-end" style="height: 100%;">
+                                     <div class="w-full bg-success transition-all duration-300" style="height: ${dayStat.percentage}%;"></div>
+                                </div>
+                                <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">${dayStat.day.substring(0,3)}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+
+        // --- UI Interactions ---
+
+        function viewProgram(programIdToShow) {
+            const program = programs.find(p => p.id === programIdToShow);
+            if (!program) { showToast("Program bulunamadı.", "error"); return; }
+
+            currentProgramId = programIdToShow;
+            const modalTitle = document.getElementById('modal-title');
+            const modalContent = document.getElementById('modal-content');
+             if (!modalTitle || !modalContent) return;
+
+            modalTitle.textContent = `${program.title} - ${program.studentName || 'Bilinmiyor'}`;
+            const completionStats = calculateProgramCompletionStats(programIdToShow);
+            const modalProgressBar = document.getElementById('modal-progress-bar');
+            const modalProgressText = document.getElementById('modal-progress-text');
+            if(modalProgressBar) modalProgressBar.style.width = `${completionStats.percentage}%`;
+            if(modalProgressText) modalProgressText.textContent = `${completionStats.completed}/${completionStats.total} ödev tamamlandı`;
+
+             const programDate = program.date?.toDate ? program.date.toDate() : new Date();
+             const dateStr = programDate.toLocaleDateString('tr-TR');
+             const programTypeStr = program.isTimed ? 'Saatli Program' : 'Saatsiz Program';
+
+            let content = `
+                <div class="mb-4 text-sm">
+                    <p><strong class="font-medium">Tarih:</strong> ${dateStr}</p>
+                    <p><strong class="font-medium">Tür:</strong> ${programTypeStr}</p>
+                </div>
+                <div class="space-y-5">`;
+
+            let hasAnyAssignment = false;
+            program.schedule?.forEach(day => {
+                 if (!day.assignments || day.assignments.length === 0) return;
+                 hasAnyAssignment = true;
+                 content += `
+                    <div class="card p-4 border border-gray-200 dark:border-gray-600 rounded-lg shadow-sm">
+                        <h4 class="text-md font-semibold text-gray-800 dark:text-white mb-3">${day.day}</h4>
+                        <ul class="space-y-3">`;
+                 day.assignments.forEach((assignment, index) => {
+                     const isCompleted = assignment.completed;
+                     content += `
+                         <li class="flex items-center py-1">
+                             <div class="custom-checkbox touch-target ${isCompleted ? 'checked' : ''}" data-day="${day.day}" data-index="${index}" role="checkbox" aria-checked="${isCompleted}" tabindex="0">
+                                 <i class="fas fa-check"></i>
+                             </div>
+                             <span class="ml-3 text-sm ${isCompleted ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-700 dark:text-gray-200'}">
+                                ${assignment.bookTitle || 'Kitap Yok'}: ${assignment.pages || '?'}
+                             </span>
+                             ${program.isTimed && (assignment.startTime || assignment.endTime)
+                                 ? `<span class="ml-auto text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-600 rounded text-gray-600 dark:text-gray-300">
+                                       ${assignment.startTime || '--:--'} - ${assignment.endTime || '--:--'}
+                                    </span>`
+                                 : ''}
+                         </li>
+                     `;
+                 });
+                 content += `</ul></div>`;
+            });
+
+            if (!hasAnyAssignment) {
+                content += `<p class="text-center text-gray-500 dark:text-gray-400 py-4">Bu programda hiç ödev bulunmuyor.</p>`;
+            }
+
+            content += `</div>`;
+            modalContent.innerHTML = content;
+
+             modalContent.querySelectorAll('.custom-checkbox').forEach(checkbox => {
+                 checkbox.addEventListener('click', () => toggleAssignmentCompletionFirebase(checkbox, programIdToShow));
+                 checkbox.addEventListener('keypress', (e) => { if (e.key === 'Enter' || e.key === ' ') toggleAssignmentCompletionFirebase(checkbox, programIdToShow); });
+             });
+
+            programDetailModal?.classList.remove('hidden');
+            modalQrContainer?.classList.add('hidden');
+            if(modalQrcodeDiv) modalQrcodeDiv.innerHTML = '';
+        }
+
+        function showStudentView(programIdToShow) {
+             console.log("Öğrenci görünümü yükleniyor, program ID:", programIdToShow);
+             if (!studentViewContent) return;
+
+             studentViewContent.innerHTML = `<div class="text-center py-10"><div class="loader mx-auto"></div><p class="mt-2 text-gray-500 dark:text-gray-400">Program yükleniyor...</p></div>`;
+
+             if (!programIdToShow) {
+                  studentViewContent.innerHTML = `
+                      <div class="card p-8 mt-10 animate-fade-in text-center"> <i class="fas fa-exclamation-circle text-red-500 text-5xl mb-4"></i> <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Program Bulunamadı</h2> <p class="text-gray-600 dark:text-gray-400 mb-6">İstenen program ID'si geçersiz veya bulunamadı.</p> <button onclick="window.location.href='${baseUrl}'" class="btn btn-primary touch-target"> Ana Sayfaya Dön </button> </div>
+                  `;
+                  return;
+             }
+
+             // Firestore'dan programı çek (Gerçek zamanlı dinleyiciye gerek yok)
+             db.collection('programs').doc(programIdToShow).get()
+                 .then(doc => {
+                     if (!doc.exists) {
+                         throw new Error("Program bulunamadı veya silinmiş.");
+                     }
+                     const program = { id: doc.id, ...doc.data() };
+                     console.log("Öğrenci görünümü için program bulundu:", program.title);
+
+                     const programDate = program.date?.toDate ? program.date.toDate() : new Date();
+                     const completionStats = calculateProgramCompletionStats(program.id, program); // Program verisini doğrudan gönder
+
+                     let content = `
+                         <div class="card overflow-hidden mb-8">
+                             <div class="bg-primary text-white p-6">
+                                 <h2 class="text-2xl font-bold">${program.title}</h2>
+                                 <p class="text-blue-100 mt-1">${program.studentName || 'Bilinmiyor'} - ${programDate.toLocaleDateString('tr-TR')}</p>
+                             </div>
+                             <div class="p-6">
+                                 <div class="mb-6">
+                                     <h3 class="text-lg font-semibold mb-2 text-gray-800 dark:text-white">Haftalık İlerleme</h3>
+                                     <div class="progress-container">
+                                         <div class="progress-bar" style="width: ${completionStats.percentage}%"></div>
+                                     </div>
+                                     <div class="flex justify-between mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                         <span>${completionStats.completed} yapıldı</span>
+                                         <span>${completionStats.total} ödev</span>
+                                     </div>
+                                 </div>
+                                 <div id="student-program-container" class="space-y-6">`; // Günler için container
+
+                     let hasAnyAssignment = false;
+                     program.schedule?.forEach(day => {
+                         if (!day.assignments || day.assignments.length === 0) return;
+                         hasAnyAssignment = true;
+                         const dayCompletedCount = day.assignments.filter(a => a.completed).length;
+                         const dayTotalCount = day.assignments.length;
+                         const dayPercentage = dayTotalCount > 0 ? Math.round((dayCompletedCount / dayTotalCount) * 100) : 0;
+
+                         content += `
+                             <div class="card p-4 mb-4 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+                                 <div class="flex justify-between items-center mb-3">
+                                     <h4 class="text-md font-semibold text-gray-800 dark:text-white">${day.day}</h4>
+                                     <div class="text-xs text-gray-500 dark:text-gray-400">${dayCompletedCount}/${dayTotalCount}</div>
+                                 </div>
+                                 <div class="progress-container h-1.5 mb-4 rounded-full">
+                                     <div class="progress-bar rounded-full" style="width: ${dayPercentage}%"></div>
+                                 </div>
+                                 <ul class="space-y-3">`;
+                         day.assignments.forEach((assignment, index) => {
+                            const isCompleted = assignment.completed;
+                             content += `
+                                 <li class="flex items-start p-3 rounded-lg ${isCompleted ? 'bg-green-50 dark:bg-green-900/30' : 'bg-gray-50 dark:bg-gray-700'}">
+                                     <div class="custom-checkbox mt-1 touch-target ${isCompleted ? 'checked' : ''}" data-day="${day.day}" data-index="${index}" role="checkbox" aria-checked="${isCompleted}" tabindex="0">
+                                         <i class="fas fa-check"></i>
+                                     </div>
+                                     <div class="ml-3 flex-1">
+                                         <div class="text-sm ${isCompleted ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-700 dark:text-gray-200'}">${assignment.bookTitle || 'Kitap Yok'}</div>
+                                         <div class="text-sm ${isCompleted ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-700 dark:text-gray-200'}">${assignment.pages || '?'}</div>
+                                         ${program.isTimed && (assignment.startTime || assignment.endTime)
+                                             ? `<span class="mt-1 text-xs px-1.5 py-0.5 bg-gray-200 dark:bg-gray-600 rounded text-gray-600 dark:text-gray-300 inline-block">
+                                                    ${assignment.startTime || '--:--'} - ${assignment.endTime || '--:--'}
+                                                 </span>`
+                                             : ''}
+                                     </div>
+                                 </li>`;
+                         });
+                         content += `</ul></div>`;
+                     });
+
+                      if (!hasAnyAssignment) {
+                        content += `<div class="text-center text-gray-500 dark:text-gray-400 py-4">Bu programda ödev yok.</div>`;
+                      }
+
+                     content += `</div></div></div>`; // Container ve card kapandı
+                     studentViewContent.innerHTML = content; // Sonucu ekrana bas
+
+                     // Checkbox listener'larını ekle
+                     studentViewContent.querySelectorAll('.custom-checkbox').forEach(checkbox => {
+                          checkbox.addEventListener('click', () => toggleAssignmentCompletionFirebase(checkbox, programIdToShow));
+                          checkbox.addEventListener('keypress', (e) => { if (e.key === 'Enter' || e.key === ' ') toggleAssignmentCompletionFirebase(checkbox, programIdToShow); });
+                      });
+
+                 })
+                 .catch(error => {
+                     console.error("Öğrenci görünümü program yükleme hatası:", error);
+                     studentViewContent.innerHTML = `
+                         <div class="card p-8 mt-10 animate-fade-in text-center">
+                            <i class="fas fa-exclamation-circle text-red-500 text-5xl mb-4"></i>
+                            <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Program Yüklenemedi</h2>
+                            <p class="text-gray-600 dark:text-gray-400 mb-6">${error.message}</p>
+                            <button onclick="window.location.href='${baseUrl}'" class="btn btn-primary touch-target"> Ana Sayfaya Dön </button>
+                         </div>
+                     `;
+                 });
+         }
+
+        // --- Utility Functions ---
+
+        function initDarkMode() {
+             const isDark = localStorage.getItem('darkMode') === 'true';
+             if (isDark) {
+                 document.body.classList.add('dark');
+             }
+             updateThemeIcons(isDark);
+        }
+
+        function updateThemeIcons(isDark) {
+            const moonIcon = '<i class="fas fa-moon"></i>';
+            const sunIcon = '<i class="fas fa-sun"></i>';
+            const themeIcon = isDark ? sunIcon : moonIcon;
+            if(toggleThemeLoginBtn) toggleThemeLoginBtn.innerHTML = themeIcon;
+            if(toggleThemeBtn) {
+                const span = toggleThemeBtn.querySelector('span');
+                toggleThemeBtn.innerHTML = (isDark ? sunIcon : moonIcon) + (span ? span.outerHTML : ''); // Keep text if exists
+            }
+            if(toggleThemeStudentBtn) toggleThemeStudentBtn.innerHTML = themeIcon;
+        }
+
+        function setRgbVariables() {
+            const root = document.documentElement;
+            const styles = getComputedStyle(root);
+            const theme = document.body.classList.contains('dark') ? '.dark' : ':root';
+
+            ['primary', 'secondary', 'danger', 'success', 'warning'].forEach(colorName => {
+                const colorValue = styles.getPropertyValue(`--${colorName}`).trim();
+                if (colorValue && colorValue.startsWith('#')) {
+                    const rgb = hexToRgb(colorValue);
+                    if (rgb) {
+                         root.style.setProperty(`--${colorName}-rgb`, `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+                    }
+                }
+            });
+        }
+
+        function hexToRgb(hex) {
+             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+             return result ? {
+                 r: parseInt(result[1], 16),
+                 g: parseInt(result[2], 16),
+                 b: parseInt(result[3], 16)
+             } : null;
+         }
+
+        function toggleTheme() {
+             const isDark = document.body.classList.toggle('dark');
+             localStorage.setItem('darkMode', isDark);
+             updateThemeIcons(isDark);
+             setRgbVariables(); // Update RGB vars after theme change
+        }
+
+        function switchTab(tabName) {
+            tabContents.forEach(tab => {
+                tab.classList.remove('active');
+                tab.classList.remove('animate-fade-in'); // Remove animation class first
+            });
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+            });
+
+            const activeTab = document.getElementById(`${tabName}-tab`);
+            const activeLink = document.querySelector(`.nav-link[data-tab="${tabName}"]`);
+
+            if (activeTab) {
+                 setTimeout(() => { // Add a small delay for animation
+                    activeTab.classList.add('active');
+                    activeTab.classList.add('animate-fade-in');
+                 }, 50);
+            }
+            if (activeLink) {
+                 activeLink.classList.add('active');
+                 if(pageTitle) pageTitle.textContent = activeLink.querySelector('span')?.textContent || 'EduFlow';
+            } else {
+                 // If link not found (e.g., switched via button), find based on tabName
+                 const fallbackLink = Array.from(navLinks).find(l => l.dataset.tab === tabName);
+                 if (fallbackLink) {
+                     fallbackLink.classList.add('active');
+                     if(pageTitle) pageTitle.textContent = fallbackLink.querySelector('span')?.textContent || 'EduFlow';
+                 }
+            }
+
+             // Close sidebar on mobile after switching tab
+             if (window.innerWidth < 640 && sidebar) {
+                 sidebar.classList.add('-translate-x-full');
+             }
+        }
+
+        function updateDashboardCounts() {
+             const studentCountEl = document.getElementById('student-count');
+             const bookCountEl = document.getElementById('book-count');
+             const programCountEl = document.getElementById('program-count');
+             if (studentCountEl) studentCountEl.textContent = students.length;
+             if (bookCountEl) bookCountEl.textContent = books.length;
+             if (programCountEl) programCountEl.textContent = programs.length;
+        }
+
+        function getBooksForStudent(studentId) {
+             // Tüm genel kitapları al
+             const generalBooks = books.filter(book => !book.studentIds || book.studentIds.length === 0);
+             // Öğrenciye atanmış kitapları al
+             const assignedBooks = studentId ? books.filter(book => book.studentIds && book.studentIds.includes(studentId)) : [];
+             // Birleştir ve benzersiz yap (aynı kitap hem genel hem atanmış olabilir)
+             const allRelevantBooks = [...generalBooks, ...assignedBooks];
+             const uniqueBooks = Array.from(new Map(allRelevantBooks.map(book => [book.id, book])).values());
+             return uniqueBooks.sort((a, b) => a.title.localeCompare(b.title)); // Alfabetik sırala
+         }
+
+        function updateProgramBookSelects(studentId) {
+             const bookSelects = document.querySelectorAll('#weekly-schedule .book-select');
+             const relevantBooks = getBooksForStudent(studentId);
+
+             bookSelects.forEach(select => {
+                 const currentVal = select.value; // Seçili değeri korumaya çalış
+                 select.innerHTML = '<option value="">Kitap Seçin</option>'; // Reset
+                 relevantBooks.forEach(book => {
+                     const option = document.createElement('option');
+                     option.value = book.id;
+                     option.textContent = book.title;
+                     select.appendChild(option);
+                 });
+                 // Eski değeri geri yükle (eğer hala geçerliyse)
+                 if (relevantBooks.some(b => b.id === currentVal)) {
+                     select.value = currentVal;
+                 }
+             });
+         }
+
+        function toggleTimeInputs() {
+             const isTimed = document.querySelector('input[name="program-type"]:checked')?.value === 'timed';
+             const timeInputs = document.querySelectorAll('#weekly-schedule .time-input-group');
+             timeInputs.forEach(group => {
+                 group.classList.toggle('hidden', !isTimed);
+                 // Zamanlı değilse input değerlerini temizle (isteğe bağlı)
+                 if (!isTimed) {
+                     group.querySelectorAll('input[type="time"]').forEach(input => input.value = '');
+                 }
+             });
+         }
+
+        function populateWeekDays(studentId = null) {
+            const weeklyScheduleDiv = document.getElementById('weekly-schedule');
+            if (!weeklyScheduleDiv) return;
+            weeklyScheduleDiv.innerHTML = ''; // Önce temizle
+
+            const relevantBooks = getBooksForStudent(studentId); // Seçili öğrenciye uygun kitapları al
+
+            DAYS_OF_WEEK.forEach(day => {
+                const dayCard = document.createElement('div');
+                dayCard.className = 'card p-4 border border-gray-200 dark:border-gray-600 rounded-lg';
+                dayCard.innerHTML = `
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="text-md font-semibold text-gray-800 dark:text-white">${day}</h4>
+                        <button class="add-assignment-btn btn btn-sm btn-light touch-target" data-day="${day}">
+                            <i class="fas fa-plus text-xs mr-1"></i> Ödev
+                        </button>
+                    </div>
+                    <div class="assignments-container space-y-3">
+                        <!-- Ödevler buraya eklenecek -->
+                    </div>
+                `;
+                weeklyScheduleDiv.appendChild(dayCard);
+
+                // İlk ödev satırını ekle
+                addAssignmentToDay(dayCard.querySelector('.assignments-container'), relevantBooks);
+
+                // "Ödev Ekle" butonu için listener
+                dayCard.querySelector('.add-assignment-btn').addEventListener('click', (e) => {
+                     addAssignmentToDay(e.target.closest('.card').querySelector('.assignments-container'), relevantBooks);
+                 });
+            });
+             toggleTimeInputs(); // Başlangıçta zaman girdilerinin durumunu ayarla
+        }
+
+         // Belirli bir güne yeni ödev satırı ekleyen yardımcı fonksiyon
+         function addAssignmentToDay(container, bookList) {
+            const assignmentDiv = document.createElement('div');
+            assignmentDiv.className = 'assignment flex items-center space-x-2 animate-fade-in';
+
+            const isTimed = document.querySelector('input[name="program-type"]:checked')?.value === 'timed';
+
+            assignmentDiv.innerHTML = `
+                <select class="book-select flex-grow px-2 py-1 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700">
+                    <option value="">Kitap Seçin</option>
+                    ${bookList.map(book => `<option value="${book.id}">${book.title}</option>`).join('')}
+                </select>
+                <input type="text" class="pages-input w-20 px-2 py-1 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700" placeholder="Sayfa">
+                <div class="time-input-group flex space-x-1 ${isTimed ? '' : 'hidden'}">
+                    <input type="time" class="start-time-input w-24 px-1 py-1 text-xs rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700">
+                    <input type="time" class="end-time-input w-24 px-1 py-1 text-xs rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700">
+                </div>
+                <button class="remove-assignment-btn text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1 touch-target">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            container.appendChild(assignmentDiv);
+
+            // Silme butonu listener'ı
+             assignmentDiv.querySelector('.remove-assignment-btn').addEventListener('click', removeAssignment);
+         }
+
+         // Ödev satırını silen fonksiyon
+         function removeAssignment(e) {
+             const assignmentDiv = e.target.closest('.assignment');
+             if (assignmentDiv) {
+                 assignmentDiv.classList.add('animate-fade-out'); // Optional: Add fade-out animation
+                 setTimeout(() => assignmentDiv.remove(), 200); // Remove after animation
+             }
+         }
+
+        function generateUniqueId() { // Firestore ID ürettiği için pek kullanılmaz ama dursun.
+             return Date.now().toString(36) + Math.random().toString(36).substring(2);
+         }
+
+        function viewStudentPrograms(studentId) {
+             const student = students.find(s => s.id === studentId);
+             if (!student) return;
+             // Öğrenciler sekmesine geç
+             switchTab('programs');
+             // Programlar listesini filtrele
+             const searchInput = document.getElementById('search-programs');
+             if(searchInput) {
+                 searchInput.value = student.name; // Arama kutusuna öğrenci adını yaz
+                 filterTable('programs-list', student.name.toLowerCase(), [1, 2]); // Filtreyi uygula (isim sütunu index 1)
+             }
+             showToast(`${student.name} için programlar filtrelendi.`, 'info');
+        }
+
+        function confirmDeleteItem(itemTypeTurkish, callbackFunction, itemId, warningText = '') {
+             if (!confirmDeleteModal || !deleteMessage || !deleteWarning || !confirmDelete) return;
+             deleteMessage.textContent = `Bu ${itemTypeTurkish} silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`;
+             if (warningText) {
+                 deleteWarning.textContent = warningText;
+                 deleteWarning.classList.remove('hidden');
+             } else {
+                 deleteWarning.classList.add('hidden');
+                 deleteWarning.textContent = '';
+             }
+             deleteCallback = callbackFunction;
+             deleteItemId = itemId;
+             confirmDeleteModal.classList.remove('hidden');
+         }
+
+        function copyProgramLink() {
+             if (!currentProgramId) {
+                 showToast("Önce bir program görüntülenmeli.", "warning");
+                 return;
+             }
+             const shareUrl = `${baseUrl}?program=${currentProgramId}`;
+             navigator.clipboard.writeText(shareUrl).then(() => {
+                 showToast("Öğrenci görünümü linki kopyalandı!", "success");
+             }).catch(err => {
+                 console.error('Link kopyalanamadı: ', err);
+                 showToast("Link kopyalanamadı.", "error");
+                 // Fallback: Prompt user to copy manually
+                 // window.prompt("Kopyalamak için: Ctrl+C, Enter", shareUrl);
+             });
+         }
+
+        function showToast(message, type = 'info') {
+            if (!toastElement || !toastMessage) return;
+            toastMessage.textContent = message;
+            // Reset classes
+            toastElement.classList.remove('bg-primary', 'bg-success', 'bg-warning', 'bg-danger', 'dark:bg-primary-light', 'dark:bg-success', 'dark:bg-warning', 'dark:bg-danger');
+            let bgColor = 'bg-primary dark:bg-primary-light'; // Default: info
+            if (type === 'success') bgColor = 'bg-success dark:bg-success';
+            else if (type === 'warning') bgColor = 'bg-warning dark:bg-warning text-button-text-alt dark:text-button-text-alt'; // Warning often needs dark text
+            else if (type === 'error') bgColor = 'bg-danger dark:bg-danger';
+             toastElement.classList.add(...bgColor.split(' ')); // Add new classes
+
+             toastElement.classList.add('show');
+             setTimeout(() => { toastElement.classList.remove('show'); }, 3000); // 3 saniye sonra gizle
+        }
+
+        function calculateProgramCompletionStats(programIdToCalc, directProgramData = null) {
+             const program = directProgramData || programs.find(p => p.id === programIdToCalc);
+             if (!program || !program.schedule) return { completed: 0, total: 0, percentage: 0 };
+             let total = 0; let completed = 0;
+             program.schedule.forEach(day => {
+                 if (day.assignments) {
+                    total += day.assignments.length;
+                    completed += day.assignments.filter(a => a.completed).length;
+                 }
+             });
+             const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+             return { completed, total, percentage };
+         }
+
+        function calculateStudentCompletionStats(studentIdToCalc) {
+            let total = 0; let completed = 0;
+            const studentPrograms = programs.filter(p => p.studentId === studentIdToCalc);
+            studentPrograms.forEach(program => {
+                if (program.schedule) {
+                     program.schedule.forEach(day => {
+                        if (day.assignments) {
+                           total += day.assignments.length;
+                           completed += day.assignments.filter(a => a.completed).length;
+                        }
+                    });
+                }
+            });
+            const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+            return { completed, total, percentage };
+        }
+
+        function filterTable(tableBodyId, searchTerm, columnIndices) {
+            const tableBody = document.getElementById(tableBodyId);
+            if (!tableBody) return;
+            const rows = tableBody.getElementsByTagName('tr');
+            let visibleCount = 0;
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                let found = false;
+                if (searchTerm === '') {
+                    found = true; // Arama boşsa tümünü göster
+                } else {
+                     columnIndices.forEach(colIndex => {
+                        const cell = row.getElementsByTagName('td')[colIndex];
+                        if (cell) {
+                            const cellText = cell.textContent || cell.innerText;
+                            if (cellText.toLowerCase().includes(searchTerm)) {
+                                found = true;
+                            }
+                        }
+                    });
+                }
+
+                row.style.display = found ? '' : 'none';
+                if(found) visibleCount++;
+            }
+             // Eğer arama sonucu hiç satır yoksa mesaj göster (opsiyonel)
+             // Bu kısım, "veri yok" mesajı olan satırları da gizleyebileceği için dikkatli kullanılmalı.
+             // Belki de sadece arama terimi varken ve visibleCount=0 iken ek bir mesaj satırı eklemek daha iyi olur.
+        }
+
+        function stringToColor(str) {
+            if (!str) return '#4361ee'; // Default color if string is empty
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            let color = '#';
+            for (let i = 0; i < 3; i++) {
+                let value = (hash >> (i * 8)) & 0xFF;
+                // Avoid very light colors by ensuring a minimum value (e.g., 50)
+                // And avoid very dark colors (e.g., max 200) for better contrast with white text
+                value = Math.max(50, Math.min(200, value));
+                color += ('00' + value.toString(16)).slice(-2);
+            }
+            return color;
+        }
+
+        function populateStudentSelect() {
+            const select = document.getElementById('program-student');
+            if (!select) return;
+            const currentVal = select.value; // Seçili değeri koru
+            select.innerHTML = '<option value="">Öğrenci Seçin</option>'; // Reset
+            if (students.length === 0) {
+                 select.innerHTML = '<option value="">Öğrenci Yok</option>';
+                 return;
+            }
+            students.forEach(student => {
+                const option = document.createElement('option');
+                option.value = student.id;
+                option.textContent = student.name;
+                select.appendChild(option);
+            });
+            // Eski değeri geri yükle (eğer hala listedeyse)
+            if (students.some(s => s.id === currentVal)) {
+                select.value = currentVal;
+            } else {
+                // Eski öğrenci silindiyse haftalık programı temizle
+                 const weeklyScheduleDiv = document.getElementById('weekly-schedule');
+                 if (weeklyScheduleDiv) {
+                    weeklyScheduleDiv.classList.add('opacity-50', 'pointer-events-none');
+                    weeklyScheduleDiv.innerHTML = '';
+                 }
+            }
+        }
+
+        function populateBookStudentSelect() {
+            const select = document.getElementById('book-students');
+            if (!select) return;
+            select.innerHTML = ''; // Reset
+             if (students.length === 0) {
+                 select.innerHTML = '<option disabled>Öğrenci Yok</option>';
+                 return;
+            }
+            students.forEach(student => {
+                const option = document.createElement('option');
+                option.value = student.id;
+                option.textContent = `${student.name} (${student.class || 'Sınıf Yok'})`;
+                select.appendChild(option);
+            });
+        }
+
+        function populateStudentProgressFilter() {
+            const select = document.getElementById('progress-student-filter');
+            if (!select) return;
+            const currentVal = select.value;
+            select.innerHTML = '<option value="">Tüm Öğrenciler</option>'; // Reset with "All" option
+             if (students.length === 0) {
+                 return; // Öğrenci yoksa başka bir şey ekleme
+            }
+            students.forEach(student => {
+                const option = document.createElement('option');
+                option.value = student.id;
+                option.textContent = student.name;
+                select.appendChild(option);
+            });
+             if (students.some(s => s.id === currentVal)) {
+                select.value = currentVal;
+            }
+        }
+
+        // --- Modal QR Code Generation ---
+         function generateModalQRCode() {
+             if (!currentProgramId) {
+                 showToast("Önce bir program görüntülenmeli.", "warning");
+                 return;
+             }
+             if (!modalQrContainer || !modalQrcodeDiv) return;
+
+             const shareUrl = `${baseUrl}?program=${currentProgramId}`;
+             modalQrContainer.classList.remove('hidden');
+             modalQrcodeDiv.innerHTML = '<div class="loader mx-auto"></div>'; // Yükleniyor
+
+             // Ensure qrcode library is loaded
+             if (typeof window.qrcode !== 'function') {
+                  console.error("QR Code library (qrcode-generator) not loaded.");
+                  modalQrcodeDiv.innerHTML = '<p class="text-red-500 text-xs">QR kod kitaplığı yüklenemedi.</p>';
+                  showToast("QR Kod oluşturulamadı.", "error");
+                  return;
+             }
+
+             try {
+                 // typeNumber 0 for auto detection, errorCorrectionLevel 'L' (Low)
+                 const qr = window.qrcode(0, 'L');
+                 qr.addData(shareUrl);
+                 qr.make();
+                 // createImgTag(cellSize, margin)
+                 const qrImageHTML = qr.createImgTag(5, 4); // cell size 5, margin 4 modules
+                 modalQrcodeDiv.innerHTML = qrImageHTML;
+                 const img = modalQrcodeDiv.querySelector('img');
+                  if(img) {
+                      // Adjust size if needed via style (img tag might already have width/height)
+                      img.style.width = '150px';
+                      img.style.height = '150px';
+                      // Ensure sharp pixels
+                      img.style.imageRendering = 'pixelated'; // Standard
+                      img.style.imageRendering = '-moz-crisp-edges'; // Firefox
+                      img.style.imageRendering = '-webkit-optimize-contrast'; // Webkit (Chrome, Safari)
+                      img.style.msInterpolationMode = 'nearest-neighbor'; // IE
+                      img.alt = "Öğrenci Program Bağlantı QR Kodu";
+                      img.classList.add('inline-block'); // Prevent extra space below
+                  }
+             } catch (error) {
+                 console.error("Modal QR oluşturma hatası:", error);
+                 modalQrcodeDiv.innerHTML = '<p class="text-red-500 text-xs">QR kod oluşturulamadı.</p>';
+                 showToast("QR Kod oluşturulamadı.", "error");
+             }
+         }
+
+    
+    </script>
+</body>
+</html>
