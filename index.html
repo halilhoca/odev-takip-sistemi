@@ -910,105 +910,132 @@
         }
 
         function createProgram() {
-            const studentSelect = document.getElementById('program-student');
-            const titleInput = document.getElementById('program-title');
-            const isTimed = document.querySelector('input[name="program-type"]:checked')?.value === 'timed';
-            const studentId = studentSelect?.value;
-            const title = titleInput?.value.trim();
-            const createBtn = document.getElementById('create-program-btn');
+    const studentSelect = document.getElementById('program-student');
+    const titleInput = document.getElementById('program-title');
+    const isTimed = document.querySelector('input[name="program-type"]:checked')?.value === 'timed';
+    const studentId = studentSelect?.value;
+    const title = titleInput?.value.trim();
+    const createBtn = document.getElementById('create-program-btn');
 
-            if (!studentId) { showToast('Lütfen bir öğrenci seçin', 'warning'); return; }
-            if (!title) { showToast('Lütfen program başlığı girin', 'warning'); return; }
-            if (!createBtn) return;
+    if (!studentId) { showToast('Lütfen bir öğrenci seçin', 'warning'); return; }
+    if (!title) { showToast('Lütfen program başlığı girin', 'warning'); return; }
+    if (!createBtn) return;
 
-            const weeklyScheduleContainer = document.getElementById('weekly-schedule');
-            if (!weeklyScheduleContainer) { showToast('Haftalık program alanı bulunamadı.', 'error'); return; }
+    const weeklyScheduleContainer = document.getElementById('weekly-schedule');
+    if (!weeklyScheduleContainer) { showToast('Haftalık program alanı bulunamadı.', 'error'); return; }
 
-            const dayEntries = weeklyScheduleContainer.querySelectorAll('.card');
-            const schedule = [];
-            let totalAssignments = 0;
-            let invalidAssignmentFound = false;
+    // --- Öğrenci Adını Almadan Önce Loglama (Hata Ayıklama için) ---
+    console.log("createProgram: Program oluşturuluyor...");
+    console.log("  - Seçilen Student ID:", studentId);
+    console.log("  - Şu anki window.students:", window.students); // Güncel listeyi kontrol et
 
-            dayEntries.forEach((dayEntry, index) => {
-                const assignments = [];
-                const assignmentElements = dayEntry.querySelectorAll('.assignment');
-                assignmentElements.forEach(assignmentEl => {
-                    const bookId = assignmentEl.querySelector('.book-select')?.value;
-                    const pages = assignmentEl.querySelector('.pages-input')?.value.trim();
-                    let startTime = null, endTime = null;
-                    if (isTimed) {
-                        startTime = assignmentEl.querySelector('.start-time-input')?.value || null;
-                        endTime = assignmentEl.querySelector('.end-time-input')?.value || null;
-                    }
+    // DÜZELTME: Öğrenciyi window.students üzerinden bul ve varlığını kontrol et
+    const student = window.students?.find(s => s.id === studentId);
 
-                    // Sadece hem kitap hem sayfa varsa geçerli kabul et
-                    if (bookId && pages) {
-                        const studentBooks = getBooksForStudent(studentId);
-                        const book = studentBooks.find(b => b.id === bookId);
-                        const assignmentData = {
-                            bookId,
-                            bookTitle: book ? book.title : 'Kitap Bulunamadı',
-                            pages,
-                            completed: false,
-                            startTime: isTimed ? startTime : null, // Sadece zamanlı ise ekle
-                            endTime: isTimed ? endTime : null    // Sadece zamanlı ise ekle
-                        };
-                        assignments.push(assignmentData);
-                        totalAssignments++;
-                    } else if (bookId || pages || (isTimed && (startTime || endTime))) {
-                        // Eğer alanlardan herhangi biri dolu ama hepsi değilse (kitap+sayfa zorunlu), bu geçersiz satır
-                        invalidAssignmentFound = true;
-                    }
-                });
-                schedule.push({ day: DAYS_OF_WEEK[index], assignments });
-            });
+    console.log("  - Bulunan Student Nesnesi:", student); // Bulunan öğrenciyi logla
 
-            if (invalidAssignmentFound) {
-                showToast('Lütfen tüm ödev satırlarında hem Kitap hem de Sayfa alanlarını doldurun veya boş bırakın.', 'warning');
-                return;
+    // GÜVENLİK KONTROLÜ: Öğrenci bulunamadıysa hata ver ve çık
+    if (!student) {
+        showToast("Seçilen öğrenci bilgisi bulunamadı. Lütfen sayfayı yenileyip tekrar deneyin.", "error");
+        // Butonun kilidini açmak iyi olabilir:
+        // createBtn.disabled = false;
+        // createBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Programı Oluştur';
+        return; // İşlemi durdur
+    }
+    // --- Öğrenci bulundu, devam et ---
+
+    const dayEntries = weeklyScheduleContainer.querySelectorAll('.card');
+    const schedule = [];
+    let totalAssignments = 0;
+    let invalidAssignmentFound = false;
+
+    dayEntries.forEach((dayEntry, index) => {
+        // ... (schedule oluşturma kısmı aynı kalır) ...
+        const assignments = [];
+        const assignmentElements = dayEntry.querySelectorAll('.assignment');
+        assignmentElements.forEach(assignmentEl => {
+            const bookId = assignmentEl.querySelector('.book-select')?.value;
+            const pages = assignmentEl.querySelector('.pages-input')?.value.trim();
+            let startTime = null, endTime = null;
+            if (isTimed) {
+                startTime = assignmentEl.querySelector('.start-time-input')?.value || null;
+                endTime = assignmentEl.querySelector('.end-time-input')?.value || null;
             }
-            if (totalAssignments === 0) { showToast('Programa en az bir geçerli ödev (Kitap + Sayfa) eklemelisiniz.', 'warning'); return; }
+            if (bookId && pages) {
+                // DÜZELTME: Kitabı window.books üzerinden bulmak daha güvenli
+                const studentBooks = getBooksForStudent(studentId); // Bu zaten window.books kullanmalı
+                const book = studentBooks.find(b => b.id === bookId);
+                const assignmentData = {
+                    bookId,
+                    bookTitle: book ? book.title : 'Kitap Bulunamadı', // Kitap adını da ekleyelim
+                    pages,
+                    completed: false,
+                    startTime: isTimed ? startTime : null,
+                    endTime: isTimed ? endTime : null
+                };
+                assignments.push(assignmentData);
+                totalAssignments++;
+            } else if (bookId || pages || (isTimed && (startTime || endTime))) {
+                invalidAssignmentFound = true;
+            }
+        });
+        schedule.push({ day: DAYS_OF_WEEK[index], assignments });
+    });
 
-            createBtn.disabled = true;
-            createBtn.innerHTML = '<div class="loader mx-auto !border-2 !w-5 !h-5"></div>';
 
-            const student = students.find(s => s.id === studentId);
-            const newProgramData = {
-                studentId: studentId,
-                studentName: student ? student.name : 'Bilinmeyen Öğrenci',
-                title: title,
-                date: firebase.firestore.FieldValue.serverTimestamp(), // Sunucu zamanını kullan
-                isTimed: isTimed,
-                schedule: schedule
-            };
+    if (invalidAssignmentFound) {
+        showToast('Lütfen tüm ödev satırlarında hem Kitap hem de Sayfa alanlarını doldurun veya boş bırakın.', 'warning');
+        return;
+    }
+    if (totalAssignments === 0) { showToast('Programa en az bir geçerli ödev (Kitap + Sayfa) eklemelisiniz.', 'warning'); return; }
 
-            db.collection('programs').add(newProgramData)
-                .then((docRef) => {
-                     showToast('Program başarıyla oluşturuldu');
-                     addActivityToFirebase(`Yeni ${isTimed ? 'saatli' : 'saatsiz'} program: ${title} (${student ? student.name : '??'})`, 'success');
-                     // Formu temizle
-                     if(studentSelect) studentSelect.value = '';
-                     if(titleInput) titleInput.value = '';
-                      const untimedRadio = document.querySelector('input[name="program-type"][value="untimed"]');
-                      if (untimedRadio) untimedRadio.checked = true;
-                      toggleTimeInputs(); // Zaman girdilerini gizle
-                      weeklyScheduleContainer.classList.add('opacity-50', 'pointer-events-none');
-                      weeklyScheduleContainer.innerHTML = ''; // Haftayı sıfırla
-                     // Yeni programın detayını göster (opsiyonel)
-                     viewProgram(docRef.id); // ID'yi alıp göster
-                })
-                .catch(error => {
-                     console.error("Program oluşturma hatası:", error);
-                     showToast(`Program oluşturulurken hata: ${error.message}`, 'error');
-                     if (error.code === 'permission-denied') {
-                        showToast('Program oluşturma izniniz yok.', 'error');
-                     }
-                 })
-                .finally(() => {
-                     createBtn.disabled = false;
-                     createBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Programı Oluştur';
-                 });
-        }
+    createBtn.disabled = true;
+    createBtn.innerHTML = '<div class="loader mx-auto !border-2 !w-5 !h-5"></div>';
+
+    // DÜZELTME: Student nesnesi bulunduğundan emin olduğumuz için doğrudan kullanabiliriz.
+    const newProgramData = {
+        studentId: studentId,
+        studentName: student.name, // Artık ternary operatöre gerek yok
+        title: title,
+        date: firebase.firestore.FieldValue.serverTimestamp(),
+        isTimed: isTimed,
+        schedule: schedule
+    };
+    console.log("Firestore'a gönderilecek Program Datası:", newProgramData); // Gönderilen veriyi logla
+
+    db.collection('programs').add(newProgramData)
+        .then((docRef) => {
+             showToast('Program başarıyla oluşturuldu');
+             addActivityToFirebase(`Yeni ${isTimed ? 'saatli' : 'saatsiz'} program: ${title} (${student.name})`, 'success'); // Doğru ismi logla
+             // Formu temizle
+             if(studentSelect) studentSelect.value = '';
+             if(titleInput) titleInput.value = '';
+              const untimedRadio = document.querySelector('input[name="program-type"][value="untimed"]');
+              if (untimedRadio) untimedRadio.checked = true;
+              toggleTimeInputs();
+              if(weeklyScheduleContainer) {
+                 weeklyScheduleContainer.classList.add('opacity-50', 'pointer-events-none');
+                 weeklyScheduleContainer.innerHTML = '';
+              }
+             // DÜZELTME: viewProgram'ı çağırmadan önce küçük bir gecikme ekleyebiliriz (opsiyonel ama güvenli)
+             setTimeout(() => {
+                  viewProgram(docRef.id); // ID'yi alıp göster
+             }, 150); // 150ms bekle (onSnapshot'ın window.programs'ı güncellemesine zaman tanır)
+
+        })
+        .catch(error => {
+             console.error("Program oluşturma hatası:", error);
+             showToast(`Program oluşturulurken hata: ${error.message}`, 'error');
+             if (error.code === 'permission-denied') {
+                showToast('Program oluşturma izniniz yok.', 'error');
+             }
+         })
+        .finally(() => {
+             // Buton durumunu .then içinden sonra değil, finally içinde ayarla
+             createBtn.disabled = false;
+             createBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Programı Oluştur';
+         });
+}
 
 
         // Silme işlemleri şimdi Promise döndürüyor (confirmDelete'in finally bloğu için)
@@ -1096,71 +1123,170 @@
 
         // --- Data Update (Assignment Completion) ---
         function toggleAssignmentCompletionFirebase(checkboxElement, programId) {
-            if (!checkboxElement) return;
-            const day = checkboxElement.getAttribute('data-day');
-            const index = parseInt(checkboxElement.getAttribute('data-index'));
-            if (day === null || isNaN(index)) {
-                console.error("Checkbox data attributes missing or invalid", checkboxElement);
-                return;
-            }
+    // --- Başlangıç Kontrolleri ---
+    if (!programId) {
+        console.error("toggleAssignmentCompletionFirebase çağrıldı ancak programId eksik!");
+        showToast("Program ID eksik, işlem yapılamadı.", "error");
+        return;
+    }
+    if (!checkboxElement) {
+        console.error("toggleAssignmentCompletionFirebase çağrıldı ancak checkboxElement eksik!");
+         showToast("İşaretlenecek öğe bulunamadı.", "error");
+        return;
+    }
 
-            const programDocRef = db.collection('programs').doc(programId);
+    const day = checkboxElement.getAttribute('data-day');
+    const index = parseInt(checkboxElement.getAttribute('data-index'));
+    if (day === null || isNaN(index)) {
+        console.error("Checkbox data attributes missing or invalid", checkboxElement);
+        showToast("Öğe bilgileri eksik, işlem yapılamadı.", "error");
+        return;
+    }
 
-            const isCompleted = !checkboxElement.classList.contains('checked'); // Yeni durum
+    // --- START: Optimistic UI Update (İyimser Arayüz Güncellemesi) ---
+    const isCompleted = !checkboxElement.classList.contains('checked'); // Yeni (beklenen) durum
+    const wasCompleted = !isCompleted; // Önceki durum (hata durumunda geri almak için)
 
-            checkboxElement.style.opacity = '0.5';
-            checkboxElement.style.pointerEvents = 'none';
+    console.log(`Optimistic UI: Checkbox ${day}-${index} durumu ${isCompleted ? 'checked' : 'unchecked'} olarak ayarlanıyor.`);
 
-            programDocRef.get().then(doc => {
-                if (!doc.exists) throw new Error("Program bulunamadı!");
+    // Checkbox'ın görünümünü HEMEN değiştir
+    checkboxElement.classList.toggle('checked', isCompleted);
+    checkboxElement.setAttribute('aria-checked', isCompleted);
 
-                const programData = doc.data();
-                const newSchedule = JSON.parse(JSON.stringify(programData.schedule || [])); // Varsa kopyala, yoksa boş dizi
-                const daySchedule = newSchedule.find(d => d.day === day);
+    // İlgili metin elemanını ve liste öğesini bul
+    const listItem = checkboxElement.closest('li');
+    let textElement = null;
+    if(listItem) {
+        // Liste öğesi içindeki metin span'larını bulmaya çalışalım (checkbox hariç)
+        const spans = listItem.querySelectorAll('span');
+         spans.forEach(span => {
+              if (!checkboxElement.contains(span) && !span.querySelector('i')) { // Checkbox veya ikon içermeyen span
+                  textElement = span;
+                  return;
+              }
+          });
+         // Eğer yukarıdaki bulamazsa, daha genel bir seçici deneyebiliriz
+         if (!textElement) {
+             textElement = listItem.querySelector('span:not(:has(i))'); // İkon içermeyen ilk span
+         }
+         // Veya en basit (ama en az sağlam) yol:
+         // textElement = checkboxElement.nextElementSibling;
+    }
 
-                if (daySchedule && daySchedule.assignments && daySchedule.assignments[index] !== undefined) {
-                    const assignment = daySchedule.assignments[index];
-                    assignment.completed = isCompleted;
+    // Metin stilini güncelle
+    if (textElement) {
+        console.log("Optimistic UI: Metin stili güncelleniyor.", textElement);
+        textElement.classList.toggle('line-through', isCompleted);
+        textElement.classList.toggle('text-gray-500', isCompleted);
+        textElement.classList.toggle('dark:text-gray-400', isCompleted);
+        textElement.classList.toggle('text-gray-700', !isCompleted);
+        textElement.classList.toggle('dark:text-gray-200', !isCompleted);
+    } else {
+         console.warn("Optimistic UI: Metin elementi bulunamadı.");
+    }
 
-                    return programDocRef.update({ schedule: newSchedule });
-                } else {
-                    console.error("Güncellenecek ödev bulunamadı. Day:", day, "Index:", index, "Schedule:", newSchedule);
-                    throw new Error("Ödev bulunamadı veya program yapısı bozuk.");
-                }
-            })
-            .then(() => {
-                console.log("Ödev durumu Firestore'da güncellendi.");
-                 const program = window.programs.find(p => p.id === programId);
-                 if(program) {
-                     const dayData = program.schedule?.find(d => d.day === day);
-                     if (dayData?.assignments?.[index]) {
-                          const assignment = dayData.assignments[index];
-                          const activityMsg = `${program.studentName}: "${assignment.bookTitle}" (${assignment.pages}) ödevini ${isCompleted ? 'tamamladı' : 'tamamlanmadı olarak işaretledi'}.`;
-                          addActivityToFirebase(activityMsg, isCompleted ? 'completion' : 'uncompletion');
-                      } else {
-                           const activityMsg = `Bir ödev ${isCompleted ? 'tamamlandı' : 'tamamlanmadı olarak işaretlendi'} (Program: ${programId}, Gün: ${day}, Index: ${index}).`;
-                           addActivityToFirebase(activityMsg, isCompleted ? 'completion' : 'uncompletion');
-                      }
-                  } else {
-                      console.warn("Aktivite logu için program bulunamadı:", programId);
-                  }
-            })
-            .catch(error => {
-                console.error("Ödev durumu güncellenirken hata: ", error);
-                showToast(`Ödev durumu güncellenirken hata: ${error.message}`, "error");
-                if (error.code === 'permission-denied') {
-                   showToast('Ödev güncelleme izniniz yok.', 'error');
-                }
-                // Hata durumunda onSnapshot'ın UI'ı düzeltmesini bekle
-            })
-            .finally(() => {
-                // Kilidi kaldır (onSnapshot güncellemesinden sonra UI zaten düzelir)
-                if (checkboxElement) {
-                    checkboxElement.style.opacity = '1';
-                    checkboxElement.style.pointerEvents = 'auto';
-                }
-            });
+    // Liste öğesi arkaplanını güncelle
+    if (listItem) {
+         console.log("Optimistic UI: Liste arkaplanı güncelleniyor.", listItem);
+         listItem.classList.toggle('bg-green-50', isCompleted);
+         listItem.classList.toggle('dark:bg-green-900/30', isCompleted);
+         listItem.classList.toggle('bg-gray-50', !isCompleted);
+         listItem.classList.toggle('dark:bg-gray-700', !isCompleted);
+    } else {
+         console.warn("Optimistic UI: Liste öğesi (li) bulunamadı.");
+    }
+    // --- END: Optimistic UI Update ---
+
+
+    // Geçici olarak etkileşimi engelle
+    checkboxElement.style.opacity = '0.5';
+    checkboxElement.style.pointerEvents = 'none';
+
+    const programDocRef = db.collection('programs').doc(programId);
+
+    // Firestore get/update işlemi
+    programDocRef.get().then(doc => {
+        if (!doc.exists) throw new Error("Program bulunamadı!");
+        const programData = doc.data();
+        // Deep copy yaparken schedule'ın varlığını kontrol et
+        const newSchedule = programData.schedule ? JSON.parse(JSON.stringify(programData.schedule)) : [];
+        const daySchedule = newSchedule.find(d => d.day === day);
+
+        if (daySchedule && daySchedule.assignments && daySchedule.assignments[index] !== undefined) {
+             const assignment = daySchedule.assignments[index];
+             assignment.completed = isCompleted; // Yeni durumu ata
+             console.log(`Firestore Update: ${day}-${index} durumu ${isCompleted} olarak ayarlanıyor.`);
+             return programDocRef.update({ schedule: newSchedule });
+        } else {
+             console.error("Güncellenecek ödev bulunamadı (Firestore get içinde). Day:", day, "Index:", index, "Schedule:", newSchedule);
+             throw new Error("Ödev bulunamadı veya program yapısı bozuk.");
         }
+    })
+    .then(() => {
+        console.log("Firestore Update Başarılı: Ödev durumu güncellendi.");
+        // Aktivite loglama
+        if (Array.isArray(window.programs)) {
+            const program = window.programs.find(p => p.id === programId);
+            if(program) {
+                const dayData = program.schedule?.find(d => d.day === day);
+                if (dayData?.assignments?.[index]) {
+                     const assignment = dayData.assignments[index];
+                     const activityMsg = `${program.studentName || '??'}: "${assignment.bookTitle || '??'}" (${assignment.pages || '?'}) ödevini ${isCompleted ? 'tamamladı' : 'tamamlanmadı olarak işaretledi'}.`;
+                     addActivityToFirebase(activityMsg, isCompleted ? 'completion' : 'uncompletion');
+                 } else {
+                     const activityMsg = `Bir ödev ${isCompleted ? 'tamamlandı' : 'tamamlanmadı olarak işaretlendi'} (Detay bulunamadı - Program: ${programId}, Gün: ${day}, Index: ${index}).`;
+                     addActivityToFirebase(activityMsg, isCompleted ? 'completion' : 'uncompletion');
+                     console.warn("Aktivite logu için assignment detayı bulunamadı", program.schedule, day, index);
+                 }
+             } else {
+                 console.warn("Aktivite logu için program bulunamadı (window.programs içinde yok):", programId);
+                 const activityMsg = `Bir ödev ${isCompleted ? 'tamamlandı' : 'tamamlanmadı olarak işaretlendi'} (Program detayı bulunamadı - ID: ${programId}, Gün: ${day}, Index: ${index}).`;
+                 addActivityToFirebase(activityMsg, isCompleted ? 'completion' : 'uncompletion');
+             }
+        } else {
+             console.warn("Aktivite logu atlandı: window.programs henüz bir dizi değil.", window.programs);
+             const activityMsg = `Bir ödev ${isCompleted ? 'tamamlandı' : 'tamamlanmadı olarak işaretlendi'} (Program listesi hazır değil - ID: ${programId}, Gün: ${day}, Index: ${index}).`;
+             addActivityToFirebase(activityMsg, isCompleted ? 'completion' : 'uncompletion');
+        }
+    })
+    .catch(error => {
+        console.error("Firestore Update Hatası: ", error);
+        const findErrorMsg = error.message.includes("reading 'find'") ? " (Veri arama hatası)" : "";
+        showToast(`Ödev durumu güncellenirken hata: ${error.message}${findErrorMsg}`, "error");
+        if (error.code === 'permission-denied') {
+           showToast('Ödev güncelleme izniniz yok.', 'error');
+        }
+
+        // --- START: Hata Durumunda UI'ı Geri Al ---
+        console.warn("Firestore güncelleme hatası, Optimistic UI geri alınıyor.");
+        if (checkboxElement) {
+             checkboxElement.classList.toggle('checked', wasCompleted); // Eski duruma geri dön
+             checkboxElement.setAttribute('aria-checked', wasCompleted);
+        }
+        if (textElement) {
+             textElement.classList.toggle('line-through', wasCompleted);
+             textElement.classList.toggle('text-gray-500', wasCompleted);
+             textElement.classList.toggle('dark:text-gray-400', wasCompleted);
+             textElement.classList.toggle('text-gray-700', !wasCompleted);
+             textElement.classList.toggle('dark:text-gray-200', !wasCompleted);
+        }
+         if (listItem) {
+             listItem.classList.toggle('bg-green-50', wasCompleted);
+             listItem.classList.toggle('dark:bg-green-900/30', wasCompleted);
+             listItem.classList.toggle('bg-gray-50', !wasCompleted);
+             listItem.classList.toggle('dark:bg-gray-700', !wasCompleted);
+        }
+        // --- END: Hata Durumunda UI'ı Geri Al ---
+
+    })
+    .finally(() => {
+        // Etkileşimi tekrar aç
+        if (checkboxElement) {
+            checkboxElement.style.opacity = '1';
+            checkboxElement.style.pointerEvents = 'auto';
+        }
+    });
+}
 
         // --- Activity Logging ---
         function addActivityToFirebase(message, type = 'info') {
@@ -2101,23 +2227,27 @@ function getBooksForStudent(studentId) {
     return { completed, total, percentage };
 }
 
-        function calculateStudentCompletionStats(studentIdToCalc) {
-            let total = 0; let completed = 0;
-            const studentPrograms = programs.filter(p => p.studentId === studentIdToCalc);
-            studentPrograms.forEach(program => {
-                if (program.schedule) {
-                     program.schedule.forEach(day => {
-                        if (day.assignments) {
-                           total += day.assignments.length;
-                           completed += day.assignments.filter(a => a.completed).length;
-                        }
-                    });
+function calculateStudentCompletionStats(studentIdToCalc) {
+    console.log(`calculateStudentCompletionStats çağrıldı. studentId: ${studentIdToCalc}`); // Log eklendi
+    let total = 0; let completed = 0;
+    // DÜZELTME: window.programs kullan
+    const currentPrograms = window.programs || [];
+    const studentPrograms = currentPrograms.filter(p => p.studentId === studentIdToCalc);
+
+    studentPrograms.forEach(program => {
+        if (program.schedule) {
+             program.schedule.forEach(day => {
+                if (day.assignments) {
+                   total += day.assignments.length;
+                   completed += day.assignments.filter(a => a.completed).length;
                 }
             });
-            const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-            return { completed, total, percentage };
         }
-
+    });
+    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+    console.log(`  -> Sonuç: completed=${completed}, total=${total}, percentage=${percentage}`); // Log eklendi
+    return { completed, total, percentage };
+}
         function filterTable(tableBodyId, searchTerm, columnIndices) {
             const tableBody = document.getElementById(tableBodyId);
             if (!tableBody) return;
