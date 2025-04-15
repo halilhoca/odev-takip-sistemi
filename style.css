@@ -1,0 +1,182 @@
+/* Modalın ana kartını relative yapalım ki içindeki sticky çalışsın */
+#program-detail-modal > .card {
+    position: relative;
+     /* overflow-y-auto zaten burada olmalı */
+}
+
+/* Modalın alt kısmını (footer) sticky yapalım */
+/* Footer div'ine bir class eklemek daha iyi olurdu ama şimdilik böyle deneyelim */
+/* #modal-content elementinden SONRA gelen İLK div'i hedefliyoruz (Bu footer olmalı) */
+#modal-content + div {
+    position: -webkit-sticky; /* Safari için */
+    position: sticky;
+    bottom: 0; /* En alta yapışsın */
+    left: 0; /* Genişliği tam kaplaması için */
+    right: 0; /* Genişliği tam kaplaması için */
+    background-color: white; /* Arka planı kapatsın */
+    border-top: 1px solid var(--border-color); /* Üst çizgiyi tekrar ekleyelim */
+    z-index: 10; /* İçeriğin üzerine çıksın */
+    /* Koyu tema için arka plan */
+    .dark & {
+        background-color: var(--light); /* Koyu tema kart rengi */
+        border-top-color: var(--gray-light); /* Koyu tema border rengi */
+    }
+    /* Padding zaten kendi sınıfında var (p-6) */
+}
+
+/* Opsiyonel: QR Kod alanı da footer'daysa onu da sticky yapabiliriz */
+/* VEYA QR kod alanını footer'ın İÇİNE taşıyabilirsiniz */
+ #modal-qr-container {
+     position: -webkit-sticky;
+     position: sticky;
+     bottom: 0; /* Bu da en alta yapışır, footer'ın altına gelebilir */
+     background-color: var(--gray-lightest); /* Kendi arka planı */
+     z-index: 5; /* Footer'ın biraz altında kalsın */
+     .dark & {
+        background-color: var(--gray-lightest); /* Koyu tema rengi */
+     }
+ }
+
+
+/* İçeriğin sticky footer'ın altına girmemesi için içeriğe alt padding ekleyelim */
+/* Bu padding miktarını footer'ınızın yaklaşık yüksekliğine göre ayarlayın */
+ #modal-content {
+     padding-bottom: 12rem; /* Örnek padding - footer + QR yüksekliği kadar olabilir */
+ }
+/* === ÖNCEKİ CSS KODUNUZ BURADA === */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+    /* Açık tema için renkler */
+    --primary: #4361ee; --primary-dark: #3a56d4; --primary-light: #a8b5ff;
+    --secondary: #6930c3; --secondary-dark: #5429b3; --accent: #48bfe3;
+    --success: #06d6a0; --success-dark: #05be8c; --warning: #ffd166;
+    --warning-dark: #ffc233; --danger: #ef476f; --danger-dark: #ec2654;
+    --light: #f8f9fa; --light-dark: #e9ecef; --dark: #212529;
+    --dark-light: #232629; --gray-lightest: #f8f9fa; --gray-lighter: #e9ecef;
+    --gray-light: #ced4da; --gray: #adb5bd; --gray-dark: #6c757d;
+    --gray-darker: #495057; --gray-darkest: #343a40; --button-text: #ffffff;
+    --button-text-alt: #1a202c; --border-color: #d1d5db;
+    /* RGB versiyonları */
+    --primary-rgb: 67, 97, 238; --secondary-rgb: 105, 48, 195;
+    --danger-rgb: 239, 71, 111; --success-rgb: 6, 214, 160;
+    --warning-rgb: 255, 209, 102;
+}
+.dark {
+    /* Koyu tema için renkler */
+    --primary: #80a6ff; --primary-dark: #6495ff; --primary-light: #b3c6ff;
+    --secondary: #a575ff; --secondary-dark: #9256ff; --accent: #73e5ff;
+    --success: #20eda9; --success-dark: #0ee8a0; --warning: #ffde85;
+    --warning-dark: #ffd766; --danger: #ff7c98; --danger-dark: #ff5980;
+    --light: #2d3748; --light-dark: #1a202c; --dark: #f8f9fa;
+    --dark-light: #e9ecef; --gray-lightest: #374151; --gray-lighter: #4b5563;
+    --gray-light: #6b7280; --gray: #9ca3af; --gray-dark: #d1d5db;
+    --gray-darker: #e5e7eb; --gray-darkest: #f3f4f6; --button-text: #ffffff;
+    --button-text-alt: #1a202c; --border-color: #4b5563;
+     /* RGB versiyonları (koyu tema için farklı olabilir, ama şimdilik aynı) */
+    --primary-rgb: 128, 166, 255; --secondary-rgb: 165, 117, 255;
+    --danger-rgb: 255, 124, 152; --success-rgb: 32, 237, 169;
+    --warning-rgb: 255, 222, 133;
+}
+* { font-family: 'Poppins', sans-serif; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { font-size: 16px; }
+@media (max-width: 640px) {
+    html { font-size: 16px; } .text-xs { font-size: 0.8rem; } .text-sm { font-size: 0.9rem; }
+    .text-base { font-size: 1rem; } .text-lg { font-size: 1.125rem; } .text-xl { font-size: 1.25rem; }
+    .text-2xl { font-size: 1.5rem; } button, a, input, select { min-height: 2.75rem; padding: 0.5rem 1rem; }
+    .mobile-pad-y { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+    .mobile-pad-x { padding-left: 0.75rem; padding-right: 0.75rem; }
+}
+@media (max-width: 640px) {
+    /* ... diğer mobil stiller ... */
+
+    /* Mobil cihazlarda tablo hücre dolgusunu azaltalım */
+    table th, table td {
+        padding-left: 0.75rem;  /* px-3 */
+        padding-right: 0.75rem; /* px-3 */
+        padding-top: 0.85rem;   /* py-3.5 gibi */
+        padding-bottom: 0.85rem;
+        white-space: normal; /* Çok uzun metinlerin alta kaymasını sağlayabilir (opsiyonel) */
+    }
+     /* Başlıkların font boyutunu biraz küçültebiliriz */
+    table th {
+         font-size: 0.75rem; /* text-xs */
+     }
+    /* İlerleme çubuğunu daha dar yapabiliriz */
+     td .progress-container {
+        width: 8rem; /* w-32 */
+     }
+}
+/* Daha belirgin scrollbar (opsiyonel) */
+.responsive-table::-webkit-scrollbar {
+    height: 6px; /* Biraz daha kalın */
+}
+.responsive-table::-webkit-scrollbar-thumb {
+    background-color: var(--gray-dark); /* Daha görünür renk */
+}
+.dark .responsive-table::-webkit-scrollbar-thumb {
+    background-color: var(--gray);
+}
+
+body { background-color: var(--light); color: var(--dark); transition: background-color 0.3s, color 0.3s; }
+body.dark { background-color: var(--light-dark); color: var(--dark); }
+.btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; font-weight: 600; border-radius: 0.5rem; transition: all 0.2s; cursor: pointer; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); border: 2px solid transparent; min-height: 2.75rem; }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-sm { padding: 0.3rem 0.8rem; min-height: 2rem; font-size: 0.875rem; }
+.btn-primary { background-color: var(--primary); color: var(--button-text); } .btn-primary:hover:not(:disabled) { background-color: var(--primary-dark); }
+.btn-secondary { background-color: var(--secondary); color: var(--button-text); } .btn-secondary:hover:not(:disabled) { background-color: var(--secondary-dark); }
+.btn-success { background-color: var(--success); color: var(--button-text); } .btn-success:hover:not(:disabled) { background-color: var(--success-dark); }
+.btn-danger { background-color: var(--danger); color: var(--button-text); } .btn-danger:hover:not(:disabled) { background-color: var(--danger-dark); }
+.btn-warning { background-color: var(--warning); color: var(--button-text-alt); } .btn-warning:hover:not(:disabled) { background-color: var(--warning-dark); }
+.btn-light { background-color: var(--gray-lighter); color: var(--dark); border: 1px solid var(--border-color); } .btn-light:hover:not(:disabled) { background-color: var(--gray-light); }
+.dark .btn-light { background-color: var(--gray-lighter); color: var(--dark); border-color: var(--border-color); } .dark .btn-light:hover:not(:disabled) { background-color: var(--gray-light); }
+.card { background-color: #ffffff; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1); transition: all 0.3s; border: 1px solid var(--border-color); }
+.dark .card { background-color: var(--light); border-color: var(--gray-light); }
+.tab-content { display: none; } .tab-content.active { display: block; } .dark { color-scheme: dark; }
+::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: var(--gray-lighter); border-radius: 8px; }
+.dark ::-webkit-scrollbar-track { background: var(--gray-darker); } ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: var(--primary-dark); }
+.animate-fade-in { animation: fadeIn 0.4s ease-in-out; } .animate-slide-up { animation: slideUp 0.3s ease-out; }
+.animate-slide-down { animation: slideDown 0.3s ease-out; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.loader { border: 3px solid rgba(var(--primary-rgb), 0.3); border-radius: 50%; border-top: 3px solid var(--primary); width: 24px; height: 24px; animation: spin 1s linear infinite; display: inline-block; } /* display: inline-block eklendi */
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.toast { visibility: hidden; min-width: 280px; background-color: var(--primary); color: white; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 100; left: 50%; bottom: 30px; transform: translateX(-50%) translateY(100px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); }
+.toast.show { visibility: visible; animation: toast-in 0.5s, toast-out 0.5s 2.5s; animation-fill-mode: forwards; }
+@keyframes toast-in { from {transform: translateX(-50%) translateY(100px); opacity: 0;} to {transform: translateX(-50%) translateY(0); opacity: 1;} }
+@keyframes toast-out { from {transform: translateX(-50%) translateY(0); opacity: 1;} to {transform: translateX(-50%) translateY(100px); opacity: 0;} }
+.hover-card { transition: all 0.3s ease; } .hover-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); }
+.custom-checkbox { width: 32px; height: 32px; background-color: white; border: 2px solid var(--gray); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); flex-shrink: 0; }
+.dark .custom-checkbox { background-color: var(--light); border-color: var(--gray); }
+.custom-checkbox.checked { background-color: var(--success); border-color: var(--success); }
+.custom-checkbox i { color: white; font-size: 16px; display: none; } .custom-checkbox.checked i { display: block; }
+.progress-container { width: 100%; height: 8px; background-color: var(--gray-lighter); border-radius: 4px; overflow: hidden; }
+.dark .progress-container { background-color: var(--gray-darker); } .progress-bar { height: 100%; background-color: var(--success); border-radius: 4px; transition: width 0.3s ease; }
+.avatar { width: 40px; height: 40px; border-radius: 50%; background-color: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 18px; flex-shrink: 0; }
+#qrcode { display: flex; justify-content: center; padding: 1rem; background-color: white; border-radius: 8px; }
+@media (max-width: 640px) { .responsive-table { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; } .responsive-table::-webkit-scrollbar { height: 4px; } }
+@media (max-width: 640px) { .custom-checkbox { width: 28px; height: 28px; } .custom-checkbox i { font-size: 14px; } .touch-target { min-height: 44px; min-width: 44px; display: flex; align-items: center; justify-content: center; } button, .button, a, input[type="button"], input[type="submit"] { min-height: 44px; } }
+.json-textarea { width: 100%; min-height: 200px; font-family: monospace; white-space: pre; overflow-wrap: normal; overflow-x: scroll; tab-size: 2; }
+input, select, textarea { background-color: #ffffff; border: 1px solid var(--border-color); color: var(--dark); border-radius: 0.5rem; transition: all 0.3s; padding: 0.5rem 0.75rem; }
+input[type="time"] { padding: 0.5rem 0.5rem; }
+.dark input, .dark select, .dark textarea { background-color: var(--gray-lighter); border-color: var(--gray-light); color: var(--gray-darkest); }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.2); }
+input.form-radio { padding: 0; height: 1em; width: 1em; margin-right: 0.5em; }
+table { border-collapse: separate; border-spacing: 0; width: 100%; }
+table th { background-color: var(--gray-lightest); color: var(--gray-dark); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 1rem; text-align: left; border-bottom: 2px solid var(--border-color); }
+.dark table th { background-color: var(--gray-lightest); color: var(--gray-dark); border-bottom-color: var(--gray-light); }
+table td { padding: 1rem; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+.dark table td { border-bottom-color: var(--gray-light); }
+.action-btn { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 9999px; transition: all 0.2s; cursor: pointer; border: 2px solid transparent; }
+.action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.action-btn-view { background-color: rgba(var(--primary-rgb), 0.15); color: var(--primary); } .dark .action-btn-view { background-color: rgba(var(--primary-rgb), 0.25); color: var(--primary-light); } .action-btn-view:hover:not(:disabled) { background-color: var(--primary); color: white; }
+.action-btn-delete { background-color: rgba(var(--danger-rgb), 0.15); color: var(--danger); } .dark .action-btn-delete { background-color: rgba(var(--danger-rgb), 0.25); color: var(--danger); } .action-btn-delete:hover:not(:disabled) { background-color: var(--danger); color: white; }
+#sidebar { background-color: white; border-right: 1px solid var(--border-color); } .dark #sidebar { background-color: var(--light); border-right-color: var(--gray-light); }
+.nav-link { display: flex; align-items: center; padding: 0.75rem 1rem; border-radius: 0.5rem; transition: all 0.3s; margin-bottom: 0.25rem; color: var(--gray-dark); }
+.dark .nav-link { color: var(--gray-dark); } .nav-link:hover { background-color: var(--gray-lightest); color: var(--primary); }
+.dark .nav-link:hover { background-color: var(--gray-lighter); color: var(--primary-light); } .nav-link.active { background-color: var(--primary); color: white !important; }
+.nav-link i { width: 1.25rem; text-align: center; color: var(--gray); transition: color 0.3s; } .dark .nav-link i { color: var(--gray); }
+.nav-link:hover i { color: var(--primary); } .dark .nav-link:hover i { color: var(--primary-light); } .nav-link.active i { color: white !important; }
+/* === / ÖNCEKİ CSS KODUNUZ BURADA BİTİYOR === */

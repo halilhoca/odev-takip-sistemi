@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EduFlow | Ödev Takip Sistemi (Firebase)</title>
+    <!-- Harici CSS Dosyası -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Tailwind ve FontAwesome CDN'leri -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 text-gray-800 min-h-screen transition-colors duration-150">
+
+    <!-- === Toast Bildirim Alanı === -->
+    <div id="toast" class="toast">
+        <span id="toast-message"></span>
+    </div>
+
+    <!-- === Öğrenci Görünümü Alanı (Başlangıçta Gizli) === -->
+    <div id="student-view" class="hidden">
+        <header class="bg-white dark:bg-gray-800 shadow-md">
+            <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center">
+                <div class="flex items-center mb-3 sm:mb-0">
+                    <div class="flex items-center">
+                        <i class="fas fa-book-reader text-primary text-3xl mr-3"></i>
+                        <h1 class="text-xl font-bold text-gray-900 dark:text-white">EduFlow</h1>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="toggle-theme-student" class="btn btn-light touch-target">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button id="back-to-login-student" class="btn btn-primary touch-target">
+                        <i class="fas fa-arrow-left mr-2"></i>Ana Sayfa
+                    </button>
+                </div>
+            </div>
+        </header>
+        <main class="max-w-6xl mx-auto px-4 py-6 animate-fade-in">
+            <div id="student-view-content">
+                 <div class="text-center py-10">
+                     <div class="loader mx-auto"></div>
+                     <p class="mt-2 text-gray-500 dark:text-gray-400">Program yükleniyor...</p>
+                 </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- === Öğretmen Giriş Alanı (Başlangıçta Gizli) === -->
+    <div id="teacher-login" class="min-h-screen flex items-center justify-center p-4">
+        <div class="card w-full max-w-md p-8 animate-slide-up">
+            <div class="flex flex-col items-center mb-8">
+                <div class="flex items-center justify-center w-16 h-16 bg-primary rounded-full mb-4">
+                    <i class="fas fa-book-reader text-white text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-center text-gray-800 dark:text-white">EduFlow</h2>
+                <p class="text-gray-600 dark:text-gray-400 text-center mt-2">Öğretmen Girişi</p>
+            </div>
+            <div class="space-y-4">
+                 <div>
+                    <label for="email" class="block text-sm font-medium mb-1">E-posta</label>
+                    <input type="email" id="email" class="w-full px-4 py-3 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="teacher@eduflow.com" value="teacher@eduflow.com">
+                 </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium mb-1">Şifre</label>
+                    <div class="relative">
+                        <input type="password" id="password" class="w-full px-4 py-3 text-base rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Şifrenizi girin">
+                        <button id="toggle-password" class="absolute right-3 top-3 text-gray-500 dark:text-gray-400 focus:outline-none touch-target">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <button id="login-btn" class="btn btn-primary w-full text-lg touch-target">
+                    Giriş Yap
+                </button>
+                <div class="flex justify-end">
+                    <button id="toggle-theme-login" class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none touch-target">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- === Öğretmen Dashboard Alanı (Başlangıçta Gizli) === -->
+    <div id="teacher-dashboard" class="hidden min-h-screen flex">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 shadow-lg fixed h-full z-30 transition-transform duration-300 transform sm:translate-x-0 -translate-x-full">
+            <div class="px-6 py-6 flex items-center justify-between">
+                <div class="flex items-center">
+                    <i class="fas fa-book-reader text-primary text-2xl mr-3"></i>
+                    <span class="text-xl font-bold text-gray-800 dark:text-white">EduFlow</span>
+                </div>
+                <button id="close-sidebar" class="sm:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 focus:outline-none touch-target">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="px-6 py-4">
+                <div id="teacher-profile" class="flex items-center mb-6">
+                    <div class="avatar bg-primary">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 id="teacher-email-display" class="font-medium text-gray-800 dark:text-white text-sm">Öğretmen</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Admin</p>
+                    </div>
+                </div>
+                <nav class="space-y-1">
+                     <a href="#" class="nav-link active touch-target" data-tab="dashboard"> <i class="fas fa-tachometer-alt"></i> <span class="ml-3">Genel Bakış</span> </a>
+                     <a href="#" class="nav-link touch-target" data-tab="students"> <i class="fas fa-user-graduate"></i> <span class="ml-3">Öğrenciler</span> </a>
+                     <a href="#" class="nav-link touch-target" data-tab="books"> <i class="fas fa-book"></i> <span class="ml-3">Kitaplar</span> </a>
+                     <a href="#" class="nav-link touch-target" data-tab="programs"> <i class="fas fa-calendar-alt"></i> <span class="ml-3">Programlar</span> </a>
+                     <a href="#" class="nav-link touch-target" data-tab="progress"> <i class="fas fa-chart-line"></i> <span class="ml-3">İlerleme</span> </a>
+                </nav>
+            </div>
+            <div class="absolute bottom-0 left-0 right-0 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+                <button id="logout-btn" class="w-full flex items-center px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white focus:outline-none touch-target">
+                    <i class="fas fa-sign-out-alt w-5"></i> <span class="ml-3">Çıkış Yap</span>
+                </button>
+                <button id="toggle-theme" class="w-full flex items-center px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white focus:outline-none touch-target mt-2">
+                    <i class="fas fa-moon w-5"></i> <span class="ml-3">Tema Değiştir</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Ana İçerik Alanı -->
+        <div id="main-content" class="flex-1 sm:ml-64 min-h-screen">
+            <header class="bg-white dark:bg-gray-800 shadow-md">
+                 <div class="px-4 py-4 flex justify-between items-center">
+                     <button id="open-sidebar" class="sm:hidden p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none touch-target"> <i class="fas fa-bars"></i> </button>
+                     <h1 id="page-title" class="text-xl font-bold text-gray-800 dark:text-white">Genel Bakış</h1>
+                     <div> <!-- Bildirim butonu vb. eklenebilir --> </div>
+                 </div>
+             </header>
+            <main class="px-4 py-6">
+                <!-- === Sekme İçerikleri === -->
+                <!-- Dashboard Tab -->
+                <div id="dashboard-tab" class="tab-content active">
+                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                         <div class="card p-6 hover-card"> <div class="flex items-center justify-between"> <div> <p class="text-sm text-gray-500 dark:text-gray-400">Toplam Öğrenci</p> <h3 class="text-3xl font-bold text-gray-800 dark:text-white mt-1" id="student-count">0</h3> </div> <div class="h-12 w-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center"> <i class="fas fa-user-graduate text-primary text-xl"></i> </div> </div> <div class="mt-4"> <button class="text-primary hover:text-primary-dark text-sm flex items-center touch-target" data-tab-link="students"> Tüm öğrencileri gör <i class="fas fa-arrow-right ml-1"></i> </button> </div> </div>
+                         <div class="card p-6 hover-card"> <div class="flex items-center justify-between"> <div> <p class="text-sm text-gray-500 dark:text-gray-400">Toplam Kitap</p> <h3 class="text-3xl font-bold text-gray-800 dark:text-white mt-1" id="book-count">0</h3> </div> <div class="h-12 w-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center"> <i class="fas fa-book text-success text-xl"></i> </div> </div> <div class="mt-4"> <button class="text-success hover:text-success-dark text-sm flex items-center touch-target" data-tab-link="books"> Tüm kitapları gör <i class="fas fa-arrow-right ml-1"></i> </button> </div> </div>
+                         <div class="card p-6 hover-card"> <div class="flex items-center justify-between"> <div> <p class="text-sm text-gray-500 dark:text-gray-400">Toplam Program</p> <h3 class="text-3xl font-bold text-gray-800 dark:text-white mt-1" id="program-count">0</h3> </div> <div class="h-12 w-12 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center"> <i class="fas fa-calendar-alt text-secondary text-xl"></i> </div> </div> <div class="mt-4"> <button class="text-secondary hover:text-secondary-dark text-sm flex items-center touch-target" data-tab-link="programs"> Tüm programları gör <i class="fas fa-arrow-right ml-1"></i> </button> </div> </div>
+                     </div>
+                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                         <div class="card p-6"> <div class="flex items-center justify-between mb-4"> <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Ödev Tamamlama Oranı</h3> </div> <div id="completion-rates-container" class="space-y-4"> <div class="flex items-center text-gray-500 dark:text-gray-400 justify-center py-8"> <div class="loader mx-auto"></div><p class="ml-2">Veriler yükleniyor...</p> </div> </div> </div>
+                         <div class="card p-6"> <div class="flex items-center justify-between mb-4"> <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Son Aktiviteler</h3> </div> <div class="divide-y divide-gray-200 dark:divide-gray-700 max-h-80 overflow-y-auto" id="recent-activities"> <div class="flex items-center text-gray-500 dark:text-gray-400 justify-center py-8"> <div class="loader mx-auto"></div><p class="ml-2">Veriler yükleniyor...</p> </div> </div> </div>
+                     </div>
+                     <div class="card p-6">
+                         <div class="flex items-center justify-between mb-4"> <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Son Programlar</h3> <a href="#" class="text-primary hover:text-primary-dark text-sm touch-target" data-tab-link="programs"> Tümünü Gör </a> </div>
+                         <div class="overflow-x-auto responsive-table max-h-80 overflow-y-auto"> <table class="min-w-full"> <thead> <tr> <th>Tarih</th> <th>Öğrenci</th> <th>Başlık</th> <th>İlerleme</th> <th>İşlemler</th> </tr> </thead> <tbody id="recent-programs"> <tr><td colspan="5" class="text-center py-4 text-gray-500 dark:text-gray-400"><div class="loader mx-auto"></div></td></tr> </tbody> </table> </div>
+                     </div>
+                </div>
+
+                <!-- Students Tab -->
+                <div id="students-tab" class="tab-content">
+                    <div class="card p-6 mb-6"> <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Öğrenci Ekle</h3> <div class="grid grid-cols-1 md:grid-cols-3 gap-4"> <div> <label for="student-name" class="block text-sm font-medium mb-1">İsim</label> <input type="text" id="student-name" class="w-full px-4 py-3 text-base rounded-lg" placeholder="Öğrenci adı"> </div> <div> <label for="student-class" class="block text-sm font-medium mb-1">Sınıf</label> <input type="text" id="student-class" class="w-full px-4 py-3 text-base rounded-lg" placeholder="Sınıf"> </div> <div class="flex items-end"> <button id="add-student-btn" class="btn btn-primary w-full text-base touch-target"> <i class="fas fa-plus mr-2"></i>Ekle </button> </div> </div> </div>
+                    <div class="card p-6"> <div class="flex justify-between items-center mb-4"> <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Öğrenci Listesi</h3> <div class="relative"> <input type="text" id="search-students" class="pl-10 pr-4 py-2 text-base rounded-lg" placeholder="Öğrenci ara..."> <div class="absolute left-3 top-3 text-gray-500 dark:text-gray-400"> <i class="fas fa-search"></i> </div> </div> </div> <div class="overflow-x-auto responsive-table max-h-[60vh] overflow-y-auto"> <table class="min-w-full"> <thead> <tr> <th>Öğrenci</th> <th>Sınıf</th> <th>Programlar</th> <th>Tamamlama</th> <th>İşlemler</th> </tr> </thead> <tbody id="students-list"> <tr><td colspan="5" class="text-center py-4 text-gray-500 dark:text-gray-400"><div class="loader mx-auto"></div></td></tr> </tbody> </table> </div> </div>
+                </div>
+
+                 <!-- Progress Tab -->
+                <div id="progress-tab" class="tab-content">
+                    <div class="card p-6 mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Öğrenci İlerleme Durumu</h3>
+                        <div class="mb-4">
+                            <label for="progress-student-filter" class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Öğrenci Filtrele</label>
+                            <select id="progress-student-filter" class="w-full md:w-1/3 px-4 py-3 text-base rounded-lg touch-target border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700">
+                                <option value="">Tüm Öğrenciler</option>
+                                <option>Yükleniyor...</option>
+                            </select>
+                        </div>
+                        <div id="progress-charts-container" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                             <div class="flex items-center text-gray-500 dark:text-gray-400 justify-center py-8 lg:col-span-2">
+                                <div class="loader mx-auto"></div> <p class="ml-2">Veriler yükleniyor...</p>
+                             </div>
+                        </div>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Ödev Tamamlama Detayları</h3>
+                        <div id="assignment-completion-list" class="space-y-4 max-h-96 overflow-y-auto">
+                             <div class="flex items-center text-gray-500 dark:text-gray-400 justify-center py-8">
+                                <div class="loader mx-auto"></div><p class="ml-2">Veriler yükleniyor...</p>
+                             </div>
+                        </div>
+                    </div>
+                </div> <!-- progress-tab sonu -->
+
+                <!-- Books Tab -->
+                <div id="books-tab" class="tab-content">
+                    <div class="card p-6 mb-6"> <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Kitap Ekle</h3> <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"> <div> <label for="book-title" class="block text-sm font-medium mb-1">Kitap Adı</label> <input type="text" id="book-title" class="w-full px-4 py-3 text-base rounded-lg" placeholder="Kitap adı"> </div> <div> <label for="book-author" class="block text-sm font-medium mb-1">Yazar</label> <input type="text" id="book-author" class="w-full px-4 py-3 text-base rounded-lg" placeholder="Yazar adı"> </div> </div> <div class="mb-4"> <label for="book-students" class="block text-sm font-medium mb-1">Atanacak Öğrenciler (İsteğe bağlı, birden fazla seçmek için Ctrl/Cmd)</label> <select id="book-students" multiple class="w-full px-4 py-2 text-base rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 h-32 touch-target"> <option>Öğrenciler yükleniyor...</option> </select> </div> <button id="add-book-btn" class="btn btn-primary w-full text-base touch-target"> <i class="fas fa-plus mr-2"></i>Ekle </button> </div>
+                    <div class="card p-6"> <div class="flex justify-between items-center mb-4"> <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Kitap Listesi</h3> <div class="relative"> <input type="text" id="search-books" class="pl-10 pr-4 py-2 text-base rounded-lg" placeholder="Kitap ara..."> <div class="absolute left-3 top-3 text-gray-500 dark:text-gray-400"> <i class="fas fa-search"></i> </div> </div> </div> <div class="overflow-x-auto responsive-table max-h-[60vh] overflow-y-auto"> <table class="min-w-full"> <thead> <tr> <th>Kitap Adı</th> <th>Yazar</th> <th>Atama Durumu</th> <th>İşlemler</th> </tr> </thead> <tbody id="books-list"> <tr><td colspan="4" class="text-center py-4 text-gray-500 dark:text-gray-400"><div class="loader mx-auto"></div></td></tr> </tbody> </table> </div> </div>
+                </div>
+
+                <!-- Programs Tab -->
+                <div id="programs-tab" class="tab-content">
+                    <div class="card p-6 mb-6"> <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Program Oluştur</h3> <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"> <div> <label for="program-student" class="block text-sm font-medium mb-1">Öğrenci</label> <select id="program-student" class="w-full px-4 py-3 text-base rounded-lg touch-target"> <option value="">Öğrenci seçin</option> <option>Öğrenciler yükleniyor...</option> </select> </div> <div> <label for="program-title" class="block text-sm font-medium mb-1">Program Başlığı</label> <input type="text" id="program-title" class="w-full px-4 py-3 text-base rounded-lg" placeholder="Program başlığı"> </div> </div> <div class="mb-4"> <label class="block text-sm font-medium mb-2">Program Türü</label> <div class="flex space-x-4"> <label class="flex items-center cursor-pointer"> <input type="radio" name="program-type" value="untimed" class="form-radio h-4 w-4 text-primary focus:ring-primary" checked> <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Saatsiz Program</span> </label> <label class="flex items-center cursor-pointer"> <input type="radio" name="program-type" value="timed" class="form-radio h-4 w-4 text-primary focus:ring-primary"> <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Saatli Program</span> </label> </div> </div> <div class="mb-4"> <label class="block text-sm font-medium mb-2">Haftalık Program (Lütfen önce öğrenci seçin)</label> <div id="weekly-schedule" class="space-y-6 opacity-50 pointer-events-none"> <!-- Days will be added here by populateWeekDays() --> </div> </div> <button id="create-program-btn" class="btn btn-primary w-full text-base touch-target"> <i class="fas fa-save mr-2"></i>Programı Oluştur </button> </div>
+                    <div class="card p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Program Listesi</h3>
+                            <div class="relative">
+                                <input type="text" id="search-programs" class="pl-10 pr-4 py-2 text-base rounded-lg" placeholder="Program ara...">
+                                <div class="absolute left-3 top-3 text-gray-500 dark:text-gray-400"> <i class="fas fa-search"></i> </div>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto responsive-table max-h-96 overflow-y-auto">
+                            <table class="min-w-full">
+                                <thead>
+                                    <tr>
+                                        <th>Tarih</th>
+                                        <th>Öğrenci</th>
+                                        <th>Başlık (Tür)</th>
+                                        <th>İlerleme</th>
+                                        <th>İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="programs-list">
+                                    <tr><td colspan="5" class="text-center py-4 text-gray-500 dark:text-gray-400"><div class="loader mx-auto"></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                 </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- === Modallar === -->
+    <!-- Program Detayı Modalı (Yeni Sekmede Açılıyor - BU KOD ARTIK KULLANILMIYOR OLABİLİR) -->
+    <div id="program-detail-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+         <!-- Modal içeriği buradaydı, ama artık viewProgram yeni sekme açıyor -->
+         <!-- Bu div'i tamamen silebilir veya yorumda bırakabilirsiniz -->
+    </div>
+
+    <!-- Silme Onay Modalı -->
+    <div id="confirm-delete-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="card w-full max-w-md mx-4 animate-slide-up p-6"> <div class="text-center mb-4"> <i class="fas fa-exclamation-triangle text-yellow-500 text-4xl mb-4"></i> <h3 class="text-xl font-bold mb-2 text-gray-800 dark:text-white">Silme İşlemi</h3> <p id="delete-message" class="text-gray-600 dark:text-gray-400">Bu öğeyi silmek istediğinize emin misiniz?</p> <p id="delete-warning" class="text-xs text-red-600 dark:text-red-400 mt-2 hidden"></p> </div> <div class="flex justify-end space-x-4 mt-6"> <button id="cancel-delete" class="btn btn-light touch-target"> İptal </button> <button id="confirm-delete" class="btn btn-danger touch-target"> Sil </button> </div> </div>
+    </div>
+
+    <!-- === Script Kütüphaneleri === -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <!-- === Harici JavaScript Dosyası === -->
+    <script src="script.js"></script>
+
+</body>
+</html>
