@@ -4,16 +4,26 @@
   <meta charset="utf-8">
   <title>ÖdevTakip</title>
   <script type="text/javascript">
-    // GitHub Pages için SPA yönlendirme çözümü
-    var pathSegmentsToKeep = 1;
-    var l = window.location;
-    l.replace(
-      l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-      l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
-      l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
-      (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-      l.hash
-    );
+    // GitHub Pages için geliştirilmiş SPA yönlendirme çözümü
+    const repoName = 'odev-takip-sistemi';
+    const path = window.location.pathname;
+    const segments = path.split('/');
+    
+    // Repository'nin kök dizini sonrası URL'yi sessionStorage'a kaydet
+    let redirectPath;
+    if (segments.length > 2) {
+      // Repository ismi sonrası kısımları al
+      const pathSegments = segments.slice(2);
+      redirectPath = '/' + repoName + '/#/' + pathSegments.join('/');
+    } else {
+      // Kök dizin için anasayfaya yönlendir
+      redirectPath = '/' + repoName + '/';
+    }
+    
+    // Yönlendirmeyi sessionStorage'a kaydet (index.html kullanacak)
+    sessionStorage.redirect = redirectPath;
+    
+    window.location.replace('/' + repoName + '/');
   </script>
 </head>
 <body>
