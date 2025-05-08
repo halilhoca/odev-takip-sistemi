@@ -16,6 +16,12 @@ const StudentList: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentEmail, setNewStudentEmail] = useState('');
+  const [newStudentSchool, setNewStudentSchool] = useState('');
+  const [newStudentGrade, setNewStudentGrade] = useState('');
+  const [newStudentPhone, setNewStudentPhone] = useState('');
+  const [newStudentParentName, setNewStudentParentName] = useState('');
+  const [newStudentParentPhone, setNewStudentParentPhone] = useState('');
+  const [newStudentField, setNewStudentField] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   useEffect(() => {
@@ -33,12 +39,29 @@ const StudentList: React.FC = () => {
     setIsSubmitting(true);
     
     if (user) {
-      const result = await addStudent(user.id, newStudentName, newStudentEmail);
+      const result = await addStudent(
+        user.id, 
+        newStudentName, 
+        newStudentEmail,
+        newStudentSchool,
+        newStudentGrade,
+        newStudentPhone,
+        newStudentParentName,
+        newStudentParentPhone,
+        newStudentField
+      );
       
       if (result) {
         toast.success('Öğrenci başarıyla eklendi');
+        // Tüm form alanlarını temizle
         setNewStudentName('');
         setNewStudentEmail('');
+        setNewStudentSchool('');
+        setNewStudentGrade('');
+        setNewStudentPhone('');
+        setNewStudentParentName('');
+        setNewStudentParentPhone('');
+        setNewStudentField('');
         setIsModalOpen(false);
       } else {
         toast.error('Öğrenci eklenirken hata oluştu');
@@ -112,9 +135,9 @@ const StudentList: React.FC = () => {
         onClose={() => setIsModalOpen(false)}
         title="Yeni Öğrenci Ekle"
       >
-        <div className="space-y-4">
+        <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
           <Input
-            label="Öğrenci Adı"
+            label="Öğrenci Adı *"
             value={newStudentName}
             onChange={(e) => setNewStudentName(e.target.value)}
             placeholder="Öğrenci adını girin"
@@ -122,13 +145,71 @@ const StudentList: React.FC = () => {
           />
           
           <Input
-            label="Öğrenci E-postası (İsteğe bağlı)"
+            label="E-posta (İsteğe bağlı)"
             type="email"
             value={newStudentEmail}
             onChange={(e) => setNewStudentEmail(e.target.value)}
             placeholder="Öğrenci e-postasını girin"
             fullWidth
           />
+          
+          <Input
+            label="Okul"
+            value={newStudentSchool}
+            onChange={(e) => setNewStudentSchool(e.target.value)}
+            placeholder="Öğrencinin okulunu girin"
+            fullWidth
+          />
+          
+          <Input
+            label="Sınıf"
+            value={newStudentGrade}
+            onChange={(e) => setNewStudentGrade(e.target.value)}
+            placeholder="Örn: 9-A, 10. Sınıf"
+            fullWidth
+          />
+          
+          <Input
+            label="Telefon Numarası"
+            type="tel"
+            value={newStudentPhone}
+            onChange={(e) => setNewStudentPhone(e.target.value)}
+            placeholder="Örn: 555 123 4567"
+            fullWidth
+          />
+          
+          <div className="border-t border-gray-200 pt-4 mt-4">
+            <h3 className="font-medium text-gray-700 mb-2">Veli Bilgileri</h3>
+            
+            <Input
+              label="Veli Adı"
+              value={newStudentParentName}
+              onChange={(e) => setNewStudentParentName(e.target.value)}
+              placeholder="Veli adını girin"
+              fullWidth
+            />
+            
+            <div className="mt-4">
+              <Input
+                label="Veli Telefon Numarası"
+                type="tel"
+                value={newStudentParentPhone}
+                onChange={(e) => setNewStudentParentPhone(e.target.value)}
+                placeholder="Örn: 555 123 4567"
+                fullWidth
+              />
+            </div>
+          </div>
+          
+          <div className="border-t border-gray-200 pt-4 mt-4">
+            <Input
+              label="Alan (İsteğe bağlı)"
+              value={newStudentField}
+              onChange={(e) => setNewStudentField(e.target.value)}
+              placeholder="Örn: Sayısal, Sözel, Eşit Ağırlık"
+              fullWidth
+            />
+          </div>
           
           <div className="flex justify-end space-x-3 pt-3">
             <Button

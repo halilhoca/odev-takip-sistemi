@@ -10,6 +10,12 @@ export interface Student {
   name: string;
   email?: string;
   created_at: string;
+  school?: string;
+  grade?: string;
+  phone?: string;
+  parent_name?: string;
+  parent_phone?: string;
+  field?: string; // isteğe bağlı alan (sayısal, sözel vb.)
 }
 
 export interface Book {

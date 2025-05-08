@@ -1,0 +1,8 @@
+-- Öğrenci tablosuna yeni alanlar ekleme
+ALTER TABLE students
+ADD COLUMN IF NOT EXISTS school TEXT,
+ADD COLUMN IF NOT EXISTS grade TEXT,
+ADD COLUMN IF NOT EXISTS phone TEXT,
+ADD COLUMN IF NOT EXISTS parent_name TEXT,
+ADD COLUMN IF NOT EXISTS parent_phone TEXT,
+ADD COLUMN IF NOT EXISTS field TEXT;

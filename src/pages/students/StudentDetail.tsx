@@ -6,7 +6,7 @@ import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import AssignmentCard from '../../components/assignments/AssignmentCard';
 import BookCard from '../../components/books/BookCard';
-import { ArrowLeft, Book, ClipboardList, Trash2, User, Calendar, Check, X } from 'lucide-react';
+import { ArrowLeft, Book, ClipboardList, Trash2, User, Calendar, Check, X, School, Phone, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 
@@ -170,6 +170,71 @@ const StudentDetail: React.FC = () => {
           </motion.div>
         </div>
       </div>
+      
+      {/* Öğrenci Bilgileri Kartı */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="bg-white p-4 rounded-lg shadow-sm mb-8"
+      >
+        <h2 className="text-lg font-semibold mb-4 flex items-center border-b pb-2">
+          <User size={20} className="mr-2 text-indigo-600" />
+          Öğrenci Bilgileri
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <h3 className="font-medium text-gray-700 flex items-center">
+              <School size={16} className="mr-2 text-gray-500" />
+              Okul ve Sınıf
+            </h3>
+            <p className="text-gray-600 mt-1 ml-6">
+              {student.school || "Belirtilmemiş"}{student.grade ? `, ${student.grade}` : ""}
+            </p>
+            
+            {student.field && (
+              <div className="mt-3">
+                <h3 className="font-medium text-gray-700">Alan</h3>
+                <p className="text-gray-600 mt-1 ml-6">{student.field}</p>
+              </div>
+            )}
+            
+            {student.phone && (
+              <div className="mt-3">
+                <h3 className="font-medium text-gray-700 flex items-center">
+                  <Phone size={16} className="mr-2 text-gray-500" />
+                  Telefon
+                </h3>
+                <p className="text-gray-600 mt-1 ml-6">{student.phone}</p>
+              </div>
+            )}
+          </div>
+          
+          <div>
+            {(student.parent_name || student.parent_phone) && (
+              <div>
+                <h3 className="font-medium text-gray-700 flex items-center">
+                  <Users size={16} className="mr-2 text-gray-500" />
+                  Veli Bilgileri
+                </h3>
+                
+                {student.parent_name && (
+                  <p className="text-gray-600 mt-1 ml-6">
+                    <span className="font-medium">İsim:</span> {student.parent_name}
+                  </p>
+                )}
+                
+                {student.parent_phone && (
+                  <p className="text-gray-600 mt-1 ml-6">
+                    <span className="font-medium">Telefon:</span> {student.parent_phone}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </motion.div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <motion.div

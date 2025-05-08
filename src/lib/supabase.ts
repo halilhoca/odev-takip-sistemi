@@ -89,10 +89,30 @@ export async function getPrograms(userId: string) {
   return { data, error };
 }
 
-export async function createStudent(userId: string, name: string, email?: string) {
+export async function createStudent(
+  userId: string, 
+  name: string, 
+  email?: string,
+  school?: string,
+  grade?: string,
+  phone?: string,
+  parent_name?: string,
+  parent_phone?: string,
+  field?: string
+) {
   const { data, error } = await supabase
     .from('students')
-    .insert([{ user_id: userId, name, email }])
+    .insert([{ 
+      user_id: userId, 
+      name, 
+      email,
+      school,
+      grade,
+      phone,
+      parent_name,
+      parent_phone,
+      field
+    }])
     .select()
     .single();
   
