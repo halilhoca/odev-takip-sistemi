@@ -129,28 +129,22 @@ const CreateProgram: React.FC = () => {
       toast.error('Program başlığı ve öğrenci seçimi zorunludur');
       return;
     }
-    
     const totalAssignments = Object.values(assignments).reduce(
       (sum, dayAssignments) => sum + dayAssignments.length, 
       0
     );
-    
     if (totalAssignments === 0) {
       toast.error('En az bir ödev eklemelisiniz');
       return;
     }
-    
     setIsSubmitting(true);
-    
     try {
       if (user) {
         // Create program
         const program = await addProgram(user.id, programTitle, isScheduled);
-        
         if (!program) {
           throw new Error('Program oluşturulamadı');
         }
-        
         // Create assignments for each day
         for (const [day, dayAssignments] of Object.entries(assignments)) {
           for (const assignment of dayAssignments) {
@@ -166,13 +160,12 @@ const CreateProgram: React.FC = () => {
             );
           }
         }
-        
         toast.success('Program başarıyla oluşturuldu');
         navigate(`/programs/${program.id}`);
       }
-    } catch (error) {
-      toast.error('Program oluşturulurken bir hata oluştu');
-      console.error(error);
+    } catch (error: any) {
+      toast.error('Program oluşturulurken bir hata oluştu: ' + (error?.message || error));
+      console.error('Program oluşturma hatası:', error);
     } finally {
       setIsSubmitting(false);
     }
