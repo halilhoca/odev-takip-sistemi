@@ -7,7 +7,7 @@ import Modal from '../../components/ui/Modal';
 import BookCard from '../../components/books/BookCard';
 import { 
   ArrowLeft, Book, ClipboardList, Trash2, User, Calendar, Check, 
-  School, Phone, Users, GraduationCap, MapPin, BookOpen
+  School, Phone, Users, GraduationCap, MapPin, BookOpen, PlusCircle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -31,6 +31,8 @@ const StudentDetail: React.FC = () => {
   
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isAddBookModalOpen, setIsAddBookModalOpen] = useState(false);
+  const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
   
   useEffect(() => {
     if (user && studentId) {
@@ -110,6 +112,45 @@ const StudentDetail: React.FC = () => {
       toast.error('Kitap silinemedi');
     }
   };
+
+  // Kitap eklemek için yeni fonksiyon
+  const handleAddBooks = async () => {
+    if (!studentId || selectedBooks.length === 0) return;
+    
+    try {
+      const data = selectedBooks.map(bookId => ({
+        student_id: studentId,
+        book_id: bookId,
+        teacher_id: user?.id
+      }));
+      
+      const { error } = await window.supabase
+        .from('student_books')
+        .insert(data);
+      
+      if (error) throw error;
+      
+      toast.success('Kitaplar başarıyla eklendi');
+      setIsAddBookModalOpen(false);
+      setSelectedBooks([]);
+      fetchStudentBooks(studentId);
+    } catch (err) {
+      toast.error('Kitaplar eklenirken bir hata oluştu');
+      console.error(err);
+    }
+  };
+  
+  // Kitap seçimi için yardımcı fonksiyon
+  const toggleBookSelection = (bookId: string) => {
+    if (selectedBooks.includes(bookId)) {
+      setSelectedBooks(selectedBooks.filter(id => id !== bookId));
+    } else {
+      setSelectedBooks([...selectedBooks, bookId]);
+    }
+  };
+  
+  // Öğrenciye henüz atanmamış kitapları filtrele
+  const availableBooks = books.filter(book => !studentBookIds.includes(book.id));
 
   if (!student) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -273,18 +314,29 @@ const StudentDetail: React.FC = () => {
         </div>
       </motion.div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Kitaplar ve Programlar bölümleri için mevcut kodlar korunur */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        {/* Kitaplar bölümü */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.5 }}
         >
           <div className="bg-white p-4 rounded-lg shadow-sm">
-            <h2 className="text-lg font-semibold mb-4 flex items-center">
-              <Book size={20} className="mr-2 text-purple-600" />
-              Öğrenci Kitapları
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold flex items-center">
+                <Book size={20} className="mr-2 text-purple-600" />
+                Öğrenci Kitapları
+              </h2>
+              
+              <Button 
+                variant="success"
+                size="sm"
+                onClick={() => setIsAddBookModalOpen(true)}
+              >
+                <PlusCircle size={16} className="mr-1" />
+                Kitap Ekle
+              </Button>
+            </div>
             
             {studentBooksData.length > 0 ? (
               <div className="grid grid-cols-1 gap-4">
@@ -306,16 +358,30 @@ const StudentDetail: React.FC = () => {
           </div>
         </motion.div>
         
+        {/* Programlar bölümü */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
         >
           <div className="bg-white p-4 rounded-lg shadow-sm">
-            <h2 className="text-lg font-semibold mb-4 flex items-center">
-              <ClipboardList size={20} className="mr-2 text-blue-600" />
-              Programlar
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold flex items-center">
+                <ClipboardList size={20} className="mr-2 text-blue-600" />
+                Programlar
+              </h2>
+              
+              <Link to={`/programs/new?studentId=${studentId}`}>
+                <Button 
+                  variant="success"
+                  size="sm"
+                >
+                  <PlusCircle size={16} className="mr-1" />
+                  Program Oluştur
+                </Button>
+              </Link>
+            </div>
+            
             {studentPrograms.length > 0 ? (
               <div className="space-y-3">
                 {studentPrograms.map((program: any) => {
@@ -386,6 +452,86 @@ const StudentDetail: React.FC = () => {
               Sil
             </Button>
           </div>
+        </div>
+      </Modal>
+      
+      {/* Kitap Ekleme Modal'ı */}
+      <Modal
+        isOpen={isAddBookModalOpen}
+        onClose={() => {
+          setIsAddBookModalOpen(false);
+          setSelectedBooks([]);
+        }}
+        title="Öğrenciye Kitap Ekle"
+      >
+        <div className="space-y-4">
+          {availableBooks.length > 0 ? (
+            <>
+              <p className="text-gray-600 mb-4">
+                <span className="font-semibold">{student.name}</span> adlı öğrenciye eklemek istediğiniz kitapları seçin:
+              </p>
+              
+              <div className="max-h-80 overflow-y-auto">
+                <div className="space-y-2">
+                  {availableBooks.map(book => (
+                    <div 
+                      key={book.id}
+                      className={`flex items-center p-3 rounded-lg border cursor-pointer transition ${
+                        selectedBooks.includes(book.id) ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:bg-gray-50'
+                      }`}
+                      onClick={() => toggleBookSelection(book.id)}
+                    >
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900">{book.title}</div>
+                        <div className="text-sm text-gray-500">{book.author}</div>
+                      </div>
+                      
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                        selectedBooks.includes(book.id) ? 'bg-green-500' : 'border border-gray-300'
+                      }`}>
+                        {selectedBooks.includes(book.id) && (
+                          <Check size={16} className="text-white" />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3 pt-3">
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setIsAddBookModalOpen(false);
+                    setSelectedBooks([]);
+                  }}
+                >
+                  Vazgeç
+                </Button>
+                <Button
+                  variant="success"
+                  onClick={handleAddBooks}
+                  disabled={selectedBooks.length === 0}
+                >
+                  {selectedBooks.length > 0 ? `${selectedBooks.length} Kitap Ekle` : 'Kitap Ekle'}
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-6">
+              <Book size={36} className="mx-auto text-gray-400 mb-3" />
+              <p className="text-gray-600">Eklenebilecek kitap bulunmamaktadır</p>
+              <p className="text-sm text-gray-500 mt-2">Önce "Kitaplar" sayfasından kitap ekleyebilirsiniz.</p>
+              
+              <div className="mt-4">
+                <Link to="/books">
+                  <Button variant="primary">
+                    Kitaplar Sayfasına Git
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </Modal>
     </div>

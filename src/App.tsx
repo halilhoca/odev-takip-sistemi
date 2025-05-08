@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import Layout from './components/layout/Layout';
 import Login from './pages/auth/Login';
@@ -30,7 +30,7 @@ function App() {
   }
   
   return (
-    <HashRouter>
+    <BrowserRouter>
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
@@ -52,7 +52,7 @@ function App() {
         {/* Catch-all route */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
-    </HashRouter>
+    </BrowserRouter>
   );
 }
 
