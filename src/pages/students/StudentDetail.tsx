@@ -4,9 +4,11 @@ import { useAuthStore } from '../../store/authStore';
 import { useDataStore } from '../../store/dataStore';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
-import AssignmentCard from '../../components/assignments/AssignmentCard';
 import BookCard from '../../components/books/BookCard';
-import { ArrowLeft, Book, ClipboardList, Trash2, User, Calendar, Check, X, School, Phone, Users } from 'lucide-react';
+import { 
+  ArrowLeft, Book, ClipboardList, Trash2, User, Calendar, Check, 
+  School, Phone, Users, GraduationCap, MapPin, BookOpen
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 
@@ -171,72 +173,108 @@ const StudentDetail: React.FC = () => {
         </div>
       </div>
       
-      {/* Öğrenci Bilgileri Kartı */}
+      {/* Öğrenci Bilgileri Kartı - Yeni tasarım */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white p-4 rounded-lg shadow-sm mb-8"
+        className="mb-8 overflow-hidden"
       >
-        <h2 className="text-lg font-semibold mb-4 flex items-center border-b pb-2">
-          <User size={20} className="mr-2 text-indigo-600" />
-          Öğrenci Bilgileri
-        </h2>
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 rounded-t-lg">
+          <h2 className="text-xl font-bold text-white flex items-center">
+            <User size={20} className="mr-2" />
+            Öğrenci Bilgileri
+          </h2>
+        </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <h3 className="font-medium text-gray-700 flex items-center">
-              <School size={16} className="mr-2 text-gray-500" />
-              Okul ve Sınıf
-            </h3>
-            <p className="text-gray-600 mt-1 ml-6">
-              {student.school || "Belirtilmemiş"}{student.grade ? `, ${student.grade}` : ""}
-            </p>
+        <div className="bg-white rounded-b-lg shadow-md p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Sol Kolon - Temel Bilgiler */}
+            <div className="space-y-6">
+              {/* Okul Bilgileri */}
+              <div className="flex items-start">
+                <div className="bg-indigo-100 p-3 rounded-lg mr-4">
+                  <School className="h-6 w-6 text-indigo-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Okul</h3>
+                  <p className="text-gray-700 mt-1">{student.school || "Belirtilmemiş"}</p>
+                </div>
+              </div>
+              
+              {/* Sınıf Bilgileri */}
+              <div className="flex items-start">
+                <div className="bg-green-100 p-3 rounded-lg mr-4">
+                  <GraduationCap className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Sınıf</h3>
+                  <p className="text-gray-700 mt-1">{student.grade || "Belirtilmemiş"}</p>
+                </div>
+              </div>
+              
+              {/* Alan Bilgileri */}
+              <div className="flex items-start">
+                <div className="bg-blue-100 p-3 rounded-lg mr-4">
+                  <BookOpen className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Alan</h3>
+                  <p className="text-gray-700 mt-1">{student.field || "Belirtilmemiş"}</p>
+                </div>
+              </div>
+            </div>
             
-            {student.field && (
-              <div className="mt-3">
-                <h3 className="font-medium text-gray-700">Alan</h3>
-                <p className="text-gray-600 mt-1 ml-6">{student.field}</p>
+            {/* Sağ Kolon - İletişim Bilgileri */}
+            <div className="space-y-6">
+              {/* Öğrenci Telefonu */}
+              <div className="flex items-start">
+                <div className="bg-orange-100 p-3 rounded-lg mr-4">
+                  <Phone className="h-6 w-6 text-orange-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Telefon</h3>
+                  <p className="text-gray-700 mt-1">{student.phone || "Belirtilmemiş"}</p>
+                </div>
               </div>
-            )}
-            
-            {student.phone && (
-              <div className="mt-3">
-                <h3 className="font-medium text-gray-700 flex items-center">
-                  <Phone size={16} className="mr-2 text-gray-500" />
-                  Telefon
-                </h3>
-                <p className="text-gray-600 mt-1 ml-6">{student.phone}</p>
+              
+              {/* Veli Bilgileri */}
+              <div className="flex items-start">
+                <div className="bg-purple-100 p-3 rounded-lg mr-4">
+                  <Users className="h-6 w-6 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Veli Bilgileri</h3>
+                  <div className="mt-1 space-y-1">
+                    <p className="text-gray-700">
+                      <span className="font-medium">İsim:</span> {student.parent_name || "Belirtilmemiş"}
+                    </p>
+                    <p className="text-gray-700">
+                      <span className="font-medium">Telefon:</span> {student.parent_phone || "Belirtilmemiş"}
+                    </p>
+                  </div>
+                </div>
               </div>
-            )}
-          </div>
-          
-          <div>
-            {(student.parent_name || student.parent_phone) && (
-              <div>
-                <h3 className="font-medium text-gray-700 flex items-center">
-                  <Users size={16} className="mr-2 text-gray-500" />
-                  Veli Bilgileri
-                </h3>
-                
-                {student.parent_name && (
-                  <p className="text-gray-600 mt-1 ml-6">
-                    <span className="font-medium">İsim:</span> {student.parent_name}
-                  </p>
-                )}
-                
-                {student.parent_phone && (
-                  <p className="text-gray-600 mt-1 ml-6">
-                    <span className="font-medium">Telefon:</span> {student.parent_phone}
-                  </p>
-                )}
+              
+              {/* E-posta */}
+              <div className="flex items-start">
+                <div className="bg-red-100 p-3 rounded-lg mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">E-posta</h3>
+                  <p className="text-gray-700 mt-1">{student.email || "Belirtilmemiş"}</p>
+                </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </motion.div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Kitaplar ve Programlar bölümleri için mevcut kodlar korunur */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -297,11 +335,16 @@ const StudentDetail: React.FC = () => {
                         <div className="flex flex-col items-end">
                           <span className="text-xs text-gray-600 mb-1">İlerleme</span>
                           <div className="flex items-center gap-1">
-                            <Check size={14} className="text-green-500" />
-                            <span className="text-green-600 font-semibold">{completed}</span>
-                            <span className="text-gray-400">/</span>
-                            <span className="text-gray-600">{total}</span>
-                            <span className="ml-2 text-xs text-gray-500">({percent}%)</span>
+                            <div className="w-24 bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mr-2">
+                              <div 
+                                className={`h-2.5 rounded-full ${
+                                  percent < 30 ? 'bg-red-500' : 
+                                  percent < 70 ? 'bg-yellow-500' : 'bg-green-500'
+                                }`}
+                                style={{width: `${percent}%`}}
+                              ></div>
+                            </div>
+                            <span className="text-sm font-medium text-gray-700">{percent}%</span>
                           </div>
                         </div>
                       </div>
