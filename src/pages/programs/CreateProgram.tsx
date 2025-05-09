@@ -9,6 +9,7 @@ import Card from '../../components/ui/Card';
 import { ArrowLeft, Book, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { createAssignment } from '../../lib/supabase';
 
 const daysOfWeek = [
   'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'
@@ -64,7 +65,9 @@ const CreateProgram: React.FC = () => {
   // Form state for new assignment
   const [newAssignment, setNewAssignment] = useState<DayAssignment>({
     bookId: '',
-    pageRange: '', // e.g. "10-20" veya not
+    pageStart: 1,
+    pageEnd: 1,
+    note: '',
     time: isScheduled ? '08:00' : undefined
   });
   
@@ -83,17 +86,17 @@ const CreateProgram: React.FC = () => {
     }
     // Sayfa aralığı veya not
     let pageStart = 1, pageEnd = 1, note = '';
-    if (newAssignment.pageRange) {
-      const parsed = newAssignment.pageRange.split('-').map(s => parseInt(s.trim(), 10));
+    if (newAssignment.note) {
+      const parsed = newAssignment.note.split('-').map(s => parseInt(s.trim(), 10));
       if (parsed.length === 2 && parsed[0] && parsed[1] && parsed[0] <= parsed[1]) {
         pageStart = parsed[0];
         pageEnd = parsed[1];
-        note = newAssignment.pageRange; // Sayfa aralığı da note olarak kaydedilecek
+        note = newAssignment.note; // Sayfa aralığı da note olarak kaydedilecek
       } else if (parsed.length === 1 && parsed[0]) {
         pageStart = pageEnd = parsed[0];
-        note = newAssignment.pageRange;
+        note = newAssignment.note;
       } else {
-        note = newAssignment.pageRange;
+        note = newAssignment.note;
       }
     }
     setAssignments(prev => ({
@@ -112,7 +115,9 @@ const CreateProgram: React.FC = () => {
     // Reset form
     setNewAssignment({
       bookId: '',
-      pageRange: '',
+      pageStart: 1,
+      pageEnd: 1,
+      note: '',
       time: isScheduled ? '08:00' : undefined
     });
   };
@@ -148,7 +153,7 @@ const CreateProgram: React.FC = () => {
         // Create assignments for each day
         for (const [day, dayAssignments] of Object.entries(assignments)) {
           for (const assignment of dayAssignments) {
-            await addAssignment(
+            const { error } = await createAssignment(
               program.id,
               selectedStudent,
               assignment.bookId,
@@ -156,8 +161,12 @@ const CreateProgram: React.FC = () => {
               assignment.pageEnd,
               day,
               assignment.time,
-              assignment.note // not bilgisini de gönder
+              assignment.note
             );
+            if (error) {
+              toast.error('Supabase error: ' + JSON.stringify(error));
+              console.error('Supabase assignment ekleme hatası:', error);
+            }
           }
         }
         toast.success('Program başarıyla oluşturuldu');
@@ -307,8 +316,8 @@ const CreateProgram: React.FC = () => {
               <Input
                 label="Sayfa Aralığı veya Not Ekle (örn: 10-20 veya 'Sadece okuma')"
                 placeholder="örn: 10-20 veya 'Sadece okuma'"
-                value={newAssignment.pageRange}
-                onChange={e => setNewAssignment(prev => ({ ...prev, pageRange: e.target.value }))}
+                value={newAssignment.note}
+                onChange={e => setNewAssignment(prev => ({ ...prev, note: e.target.value }))}
                 fullWidth
               />
             </div>
