@@ -212,8 +212,8 @@ const CreateProgram: React.FC = () => {
         <p className="text-gray-600">Öğrenciniz için yeni bir ödev programı oluşturun</p>
       </motion.div>
       
-      <Card className="p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <Card className="p-3 sm:p-6 mb-6">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2">
           <Input
             label="Program Başlığı"
             value={programTitle}
@@ -230,11 +230,11 @@ const CreateProgram: React.FC = () => {
             fullWidth
           />
           
-          <div className="md:col-span-2">
+          <div className="col-span-1 sm:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Program Türü
             </label>
-            <div className="flex space-x-4">
+            <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0">
               <label className="flex items-center cursor-pointer">
                 <input
                   type="radio"
@@ -260,8 +260,8 @@ const CreateProgram: React.FC = () => {
       </Card>
       
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Günler</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Günler</h2>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 sm:gap-4">
           {daysOfWeek.map((day, index) => (
             <motion.button
               key={day}
@@ -270,9 +270,10 @@ const CreateProgram: React.FC = () => {
               transition={{ delay: index * 0.1, duration: 0.5 }}
               onClick={() => setSelectedDay(selectedDay === day ? null : day)}
               className={`
-                p-4 rounded-lg text-white font-medium transition-all duration-200
+                p-3 sm:p-4 rounded-lg text-white font-medium transition-all duration-200
                 ${dayColors[day]}
-                ${selectedDay === day ? 'ring-4 ring-offset-2 ring-offset-gray-50 scale-105' : ''}
+                ${selectedDay === day ? 'ring-2 sm:ring-4 ring-offset-2 ring-offset-gray-50 scale-105' : ''}
+                text-xs sm:text-base
               `}
             >
               <span className="block text-lg font-bold">{day}</span>
@@ -290,13 +291,13 @@ const CreateProgram: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center">
-              <div className={`w-6 h-6 rounded-full mr-2 ${dayColors[selectedDay]}`}></div>
+          <Card className="p-3 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold mb-4 flex items-center">
+              <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full mr-2 ${dayColors[selectedDay]}`}></div>
               {selectedDay} Ödevleri
             </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 mb-4">
               <Select
                 label="Kitap"
                 options={bookOptions}
@@ -326,29 +327,30 @@ const CreateProgram: React.FC = () => {
               variant="primary"
               onClick={handleAddAssignment}
               fullWidth
+              className="mt-2"
             >
               <Book size={16} className="mr-1" />
               Ödev Ekle
             </Button>
             
             {assignments[selectedDay].length > 0 && (
-              <div className="mt-6 space-y-4">
-                <h4 className="font-medium text-gray-900">Eklenen Ödevler</h4>
+              <div className="mt-4 sm:mt-6 space-y-2 sm:space-y-4">
+                <h4 className="font-medium text-gray-900 text-sm sm:text-base">Eklenen Ödevler</h4>
                 {assignments[selectedDay].map((assignment, index) => {
                   const book = books.find(b => b.id === assignment.bookId);
                   return (
-                    <Card key={index} className="p-4">
-                      <div className="flex items-center justify-between">
+                    <Card key={index} className="p-3 sm:p-4">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
                         <div>
-                          <p className="font-medium text-gray-900">{book?.title}</p>
-                          <p className="text-sm text-gray-600">
+                          <p className="font-medium text-gray-900 text-sm sm:text-base">{book?.title}</p>
+                          <p className="text-xs sm:text-sm text-gray-600">
                             {assignment.note
                               ? assignment.note
                               : `Sayfa: ${assignment.pageStart} - ${assignment.pageEnd}`}
                           </p>
                           {assignment.time && (
-                            <p className="text-sm text-gray-600 flex items-center">
-                              <Clock size={14} className="mr-1" />
+                            <p className="text-xs sm:text-sm text-gray-600 flex items-center">
+                              <Clock size={12} className="mr-1" />
                               {assignment.time}
                             </p>
                           )}
@@ -357,6 +359,7 @@ const CreateProgram: React.FC = () => {
                           variant="danger"
                           size="sm"
                           onClick={() => handleRemoveAssignment(selectedDay, index)}
+                          className="mt-2 sm:mt-0"
                         >
                           Sil
                         </Button>
@@ -370,12 +373,13 @@ const CreateProgram: React.FC = () => {
         </motion.div>
       )}
       
-      <div className="flex justify-end">
+      <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4">
         <Button
           variant="primary"
           onClick={handleSubmit}
           isLoading={isSubmitting}
           disabled={!selectedStudent || !programTitle}
+          fullWidth
         >
           Programı Oluştur
         </Button>
