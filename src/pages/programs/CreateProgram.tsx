@@ -6,7 +6,7 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import Card from '../../components/ui/Card';
-import { ArrowLeft, Book, Clock } from 'lucide-react';
+import { ArrowLeft, Book, Clock, Menu } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { createAssignment } from '../../lib/supabase';
@@ -61,6 +61,7 @@ const CreateProgram: React.FC = () => {
     daysOfWeek.reduce((acc, day) => ({ ...acc, [day]: [] }), {})
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   
   // Form state for new assignment
   const [newAssignment, setNewAssignment] = useState<DayAssignment>({
@@ -194,6 +195,32 @@ const CreateProgram: React.FC = () => {
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-white flex flex-col items-center px-2 py-4">
+      {/* Mobil sağ üst hamburger menü */}
+      <div className="fixed top-4 right-4 z-50 sm:hidden">
+        <button
+          onClick={() => setMenuOpen((v) => !v)}
+          className="p-2 rounded-full bg-white shadow-md border border-gray-200 focus:outline-none"
+          aria-label="Menüyü Aç"
+        >
+          <Menu size={28} className="text-indigo-700" />
+        </button>
+        {menuOpen && (
+          <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg py-2 border border-gray-100 animate-fade-in">
+            <button
+              className="w-full text-left px-4 py-2 text-indigo-700 hover:bg-indigo-50 text-base font-medium"
+              onClick={() => { setMenuOpen(false); navigate('/students'); }}
+            >
+              Öğrenciler
+            </button>
+            <button
+              className="w-full text-left px-4 py-2 text-indigo-700 hover:bg-indigo-50 text-base font-medium"
+              onClick={() => { setMenuOpen(false); navigate('/books'); }}
+            >
+              Kitaplar
+            </button>
+          </div>
+        )}
+      </div>
       <button
         onClick={() => navigate('/programs')}
         className="flex items-center text-indigo-600 hover:text-indigo-900 mb-4 text-base font-medium"
