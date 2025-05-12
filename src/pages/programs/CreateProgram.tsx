@@ -237,12 +237,12 @@ const CreateProgram: React.FC = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="mb-4 w-full max-w-lg"
+        className="mb-4 w-full max-w-2xl"
       >
         <h1 className="text-2xl font-bold text-indigo-700 mb-1">Yeni Program Oluştur</h1>
         <p className="text-gray-500 text-base">Öğrenciniz için yeni bir ödev programı oluşturun</p>
       </motion.div>
-      <Card className="p-3 sm:p-6 mb-6 w-full max-w-lg shadow-md rounded-2xl bg-white">
+      <Card className="p-3 sm:p-6 mb-6 w-full max-w-2xl shadow-md rounded-2xl bg-white">
         <div className="grid grid-cols-1 gap-4 sm:gap-6">
           <Input
             label="Program Başlığı"
@@ -285,9 +285,9 @@ const CreateProgram: React.FC = () => {
           </div>
         </div>
       </Card>
-      <div className="mb-6 w-full max-w-lg">
+      <div className="mb-6 w-full max-w-2xl">
         <h2 className="text-lg sm:text-xl font-semibold text-indigo-700 mb-4">Günler</h2>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 sm:gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-7 lg:grid-cols-7 sm:gap-6">
           {daysOfWeek.map((day, index) => (
             <motion.button
               key={day}
@@ -296,12 +296,12 @@ const CreateProgram: React.FC = () => {
               transition={{ delay: index * 0.1, duration: 0.5 }}
               onClick={() => setSelectedDay(selectedDay === day ? null : day)}
               className={`
-                p-3 sm:p-4 rounded-xl shadow text-white font-medium transition-all duration-200
+                p-4 sm:p-6 rounded-xl shadow text-white font-medium transition-all duration-200
                 ${(dayColors as Record<string, string>)[day]}
                 ${selectedDay === day ? 'ring-2 sm:ring-4 ring-offset-2 ring-offset-gray-50 scale-105' : ''}
-                text-xs sm:text-base
+                text-base sm:text-lg
               `}
-              style={{ minWidth: 90 }}
+              style={{ minWidth: 120 }}
             >
               <span className="block text-lg font-bold">{day}</span>
               <span className="block text-sm mt-1">
@@ -315,7 +315,7 @@ const CreateProgram: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 w-full max-w-lg"
+          className="mb-6 w-full max-w-2xl"
         >
           <Card className="p-3 sm:p-6 shadow rounded-2xl bg-white">
             <h3 className="text-base sm:text-lg font-semibold mb-4 flex items-center text-indigo-700">
@@ -395,7 +395,7 @@ const CreateProgram: React.FC = () => {
           </Card>
         </motion.div>
       )}
-      <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4 w-full max-w-lg">
+      <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4 w-full max-w-2xl">
         <Button
           variant="primary"
           onClick={handleSubmit}
