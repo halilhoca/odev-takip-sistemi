@@ -194,7 +194,7 @@ const CreateProgram: React.FC = () => {
   if (!user) return null;
   
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-white flex flex-col items-center px-2 py-4">
+    <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-white flex flex-col items-center px-0 py-0 w-full">
       {/* DEBUG: Hamburger menü render edildi */}
       <div className="fixed top-1 left-1 z-50 sm:hidden bg-yellow-200 text-yellow-900 px-2 py-1 rounded text-xs font-bold shadow">
         DEBUG: Hamburger menü kodu render edildi
@@ -237,13 +237,13 @@ const CreateProgram: React.FC = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="mb-4 w-full max-w-2xl"
+        className="mb-4 w-full max-w-none"
       >
         <h1 className="text-2xl font-bold text-indigo-700 mb-1">Yeni Program Oluştur</h1>
         <p className="text-gray-500 text-base">Öğrenciniz için yeni bir ödev programı oluşturun</p>
       </motion.div>
-      <Card className="p-3 sm:p-6 mb-6 w-full max-w-2xl shadow-md rounded-2xl bg-white">
-        <div className="grid grid-cols-1 gap-4 sm:gap-6">
+      <Card className="p-3 sm:p-6 mb-6 w-full max-w-none shadow-md rounded-2xl bg-white">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 w-full">
           <Input
             label="Program Başlığı"
             value={programTitle}
@@ -285,9 +285,9 @@ const CreateProgram: React.FC = () => {
           </div>
         </div>
       </Card>
-      <div className="mb-6 w-full max-w-2xl">
+      <div className="mb-6 w-full max-w-none">
         <h2 className="text-lg sm:text-xl font-semibold text-indigo-700 mb-4">Günler</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-7 lg:grid-cols-7 sm:gap-6">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-7 lg:grid-cols-7 sm:gap-6 w-full">
           {daysOfWeek.map((day, index) => (
             <motion.button
               key={day}
@@ -315,9 +315,9 @@ const CreateProgram: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 w-full max-w-2xl"
+          className="mb-6 w-full max-w-none"
         >
-          <Card className="p-3 sm:p-6 shadow rounded-2xl bg-white">
+          <Card className="p-3 sm:p-6 shadow rounded-2xl bg-white w-full max-w-none">
             <h3 className="text-base sm:text-lg font-semibold mb-4 flex items-center text-indigo-700">
               <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full mr-2 ${(dayColors as Record<string, string>)[selectedDay]}`}></div>
               {selectedDay} Ödevleri
@@ -395,7 +395,7 @@ const CreateProgram: React.FC = () => {
           </Card>
         </motion.div>
       )}
-      <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4 w-full max-w-2xl">
+      <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4 w-full max-w-none">
         <Button
           variant="primary"
           onClick={handleSubmit}
