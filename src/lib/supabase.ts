@@ -68,6 +68,8 @@ export async function getPrograms(userId: string) {
     .select(`
       *,
       assignments (
+        id,
+        is_completed,
         student_id,
         students (name)
       )

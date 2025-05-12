@@ -49,6 +49,13 @@ export interface Program {
     }[];
   }[];
   created_at: string;
+  // Eklendi:
+  assignments?: {
+    id: string;
+    is_completed: boolean;
+    student_id: string;
+    students?: { name: string };
+  }[];
 }
 
 export interface Assignment {

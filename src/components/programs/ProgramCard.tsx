@@ -13,20 +13,14 @@ interface ProgramCardProps {
 const ProgramCard: React.FC<ProgramCardProps> = ({ program, index }) => {
   const programDate = program.date?.toDate ? program.date.toDate() : new Date();
   const dateStr = programDate.toLocaleDateString('tr-TR');
-  
-  // Calculate completion stats
-  let totalAssignments = 0;
-  let completedAssignments = 0;
-  program.schedule?.forEach(day => {
-    if (day.assignments) {
-      totalAssignments += day.assignments.length;
-      completedAssignments += day.assignments.filter(a => a.completed).length;
-    }
-  });
+
+  // Yeni: assignments üzerinden ilerleme hesapla
+  const totalAssignments = program.assignments?.length || 0;
+  const completedAssignments = program.assignments?.filter((a: any) => a.is_completed)?.length || 0;
   const completionPercentage = totalAssignments > 0 
     ? Math.round((completedAssignments / totalAssignments) * 100) 
     : 0;
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}

@@ -195,6 +195,10 @@ const CreateProgram: React.FC = () => {
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-white flex flex-col items-center px-2 py-4">
+      {/* DEBUG: Hamburger menü render edildi */}
+      <div className="fixed top-1 left-1 z-50 sm:hidden bg-yellow-200 text-yellow-900 px-2 py-1 rounded text-xs font-bold shadow">
+        DEBUG: Hamburger menü kodu render edildi
+      </div>
       {/* Mobil sağ üst hamburger menü */}
       <div className="fixed top-4 right-4 z-50 sm:hidden">
         <button
