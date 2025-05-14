@@ -233,17 +233,28 @@ const ProgramView: React.FC = () => {
           </div>
         </Card>
         
-        {/* Gün sekmeleri */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-3">
-          {allDays.map(day => (
-            <button
+        {/* Günler - Büyük ve renkli butonlar */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-7 lg:grid-cols-7 sm:gap-6 w-full mb-8">
+          {allDays.map((day, index) => (
+            <motion.button
               key={day}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1, duration: 0.5 }}
               onClick={() => setSelectedDay(day)}
-              className={`px-6 py-2.5 rounded-full text-base font-semibold transition-all whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-indigo-400 shadow ${dayColors[day]} ${selectedDay === day ? 'scale-110 ring-4 ring-white' : 'opacity-75 hover:opacity-100'} text-white border-none`}
+              className={`
+                p-4 sm:p-6 rounded-xl shadow text-white font-medium transition-all duration-200
+                ${(dayColors as Record<string, string>)[day]}
+                ${selectedDay === day ? 'ring-2 sm:ring-4 ring-offset-2 ring-offset-gray-50 scale-105' : ''}
+                text-base sm:text-lg
+              `}
               style={{ minWidth: 120 }}
             >
-              {day}
-            </button>
+              <span className="block text-lg font-bold">{day}</span>
+              <span className="block text-sm mt-1">
+                {assignments.filter(a => a.day === day).length} ödev
+              </span>
+            </motion.button>
           ))}
         </div>
         
