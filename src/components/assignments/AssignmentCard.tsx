@@ -33,8 +33,8 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({
         <div className="flex items-center justify-between mb-2">
           <div>
             <div className="flex items-center mb-2">
-              <Book size={18} className="text-indigo-600 mr-2" />
-              <h3 className="font-medium text-gray-900">
+              <Book size={20} className="text-indigo-700 mr-2" />
+              <h3 className="font-bold text-indigo-800 text-lg tracking-tight">
                 {assignment.books?.title || assignment.book_title}
               </h3>
             </div>
@@ -45,11 +45,15 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({
               </p>
             )}
             
-            <p className="text-sm text-gray-600">
-              {assignment.note
-                ? assignment.note
-                : `Sayfa: ${assignment.page_start} - ${assignment.page_end}`}
-            </p>
+            {assignment.note ? (
+              <div className="inline-block bg-yellow-100 text-yellow-800 text-xs font-semibold px-3 py-1 rounded-full mt-1 mb-1">
+                {assignment.note}
+              </div>
+            ) : (
+              <div className="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full mt-1 mb-1">
+                Sayfa: {assignment.page_start} - {assignment.page_end}
+              </div>
+            )}
           </div>
           
           <div className="text-right">

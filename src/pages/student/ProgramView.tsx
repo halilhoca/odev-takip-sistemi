@@ -285,6 +285,7 @@ const ProgramView: React.FC = () => {
                         assignment={assignment}
                         index={index}
                         isStudent={true}
+                        onToggleStatus={handleToggleStatus}
                       />
                     </motion.div>
                   ))}
@@ -318,6 +319,7 @@ const ProgramView: React.FC = () => {
                         assignment={assignment}
                         index={index}
                         isStudent={true}
+                        onToggleStatus={handleToggleStatus}
                       />
                     </motion.div>
                   ))}
