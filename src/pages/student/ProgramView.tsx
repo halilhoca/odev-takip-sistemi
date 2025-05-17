@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { updatePublicAssignmentStatus } from '../../lib/publicSupabase';
 import AssignmentCard from '../../components/assignments/AssignmentCard';
 import Card from '../../components/ui/Card';
 import { Book, Calendar, Check, ClipboardList, User, X } from 'lucide-react';
@@ -94,14 +95,26 @@ const ProgramView: React.FC = () => {
     
     fetchData();
   }, [programId]);
-  
-  const handleToggleStatus = async (id: string, status: boolean) => {
+    const handleToggleStatus = async (id: string, status: boolean) => {
     try {
-      const { error } = await supabase
-        .from('assignments')
-        .update({ is_completed: status })
-        .eq('id', id);
-      if (error) throw error;
+      // Try to use authenticated Supabase client first
+      let error;
+      try {
+        const result = await supabase
+          .from('assignments')
+          .update({ is_completed: status })
+          .eq('id', id);
+        error = result.error;
+      } catch (e) {
+        error = e;
+      }
+        
+      // If there's an error (likely permission error), fall back to public client
+      if (error) {
+        const { error: publicError } = await updatePublicAssignmentStatus(id, status);
+        if (publicError) throw publicError;
+      }
+      
       // Local state'i anında güncelle
       setAssignments(current =>
         current.map(assignment =>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { updatePublicAssignmentStatus } from '../../lib/publicSupabase';
 import AssignmentCard from '../../components/assignments/AssignmentCard';
 import Card from '../../components/ui/Card';
 import { Book, GraduationCap } from 'lucide-react';
@@ -58,12 +59,23 @@ const StudentView: React.FC = () => {
   
   const handleToggleStatus = async (id: string, status: boolean) => {
     try {
-      const { error } = await supabase
-        .from('assignments')
-        .update({ is_completed: status })
-        .eq('id', id);
+      // Try to use authenticated Supabase client first
+      let error;
+      try {
+        const result = await supabase
+          .from('assignments')
+          .update({ is_completed: status })
+          .eq('id', id);
+        error = result.error;
+      } catch (e) {
+        error = e;
+      }
       
-      if (error) throw error;
+      // If there's an error (likely permission error), fall back to public client
+      if (error) {
+        const { error: publicError } = await updatePublicAssignmentStatus(id, status);
+        if (publicError) throw publicError;
+      }
       
       // Update local state
       setAssignments(
