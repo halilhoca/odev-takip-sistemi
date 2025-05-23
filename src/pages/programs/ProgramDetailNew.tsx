@@ -7,12 +7,12 @@ import Modal from '../../components/ui/Modal';
 import AssignmentCardWrapper from '../../components/assignments/AssignmentCardWrapper';
 import ProgressSummary from '../../components/assignments/ProgressSummary';
 import AssignmentCalendar from '../../components/assignments/AssignmentCalendar';
-import { ArrowLeft, Book, Calendar, Clock, ClipboardList, Trash2, User, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Book, Calendar, Clock, ClipboardList, Trash2, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import Card from '../../components/ui/Card';
 
-const ProgramDetail: React.FC = () => {
+const ProgramDetailNew: React.FC = () => {
   const { programId } = useParams<{ programId: string }>();
   const navigate = useNavigate();
   
@@ -27,7 +27,7 @@ const ProgramDetail: React.FC = () => {
   
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'completed' | 'pending'>('all');
+  
   useEffect(() => {
     if (user) {
       fetchPrograms(user.id);
@@ -83,66 +83,23 @@ const ProgramDetail: React.FC = () => {
   const days = Object.keys(assignmentsByDay);
   const weekdayOrder = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
   days.sort((a, b) => weekdayOrder.indexOf(a) - weekdayOrder.indexOf(b));
-    // Calculate completion stats
+  
+  // Calculate completion stats
   const totalAssignments = programAssignments.length;
   const completedAssignments = programAssignments.filter(a => a.is_completed).length;
   const completionPercentage = totalAssignments > 0 
     ? Math.round((completedAssignments / totalAssignments) * 100) 
     : 0;
-    
-  // Filter assignments based on the active filter
-  const filteredAssignmentsByDay: Record<string, any[]> = {};
-  
-  days.forEach(day => {
-    const dayAssignments = assignmentsByDay[day];
-    let filtered = dayAssignments;
-    
-    if (activeFilter === 'completed') {
-      filtered = dayAssignments.filter(a => a.is_completed);
-    } else if (activeFilter === 'pending') {
-      filtered = dayAssignments.filter(a => !a.is_completed);
-    }
-    
-    if (filtered.length > 0) {
-      filteredAssignmentsByDay[day] = filtered;
-    }
-  });
-  
-  // Get filtered days
-  const filteredDays = Object.keys(filteredAssignmentsByDay);
-  filteredDays.sort((a, b) => weekdayOrder.indexOf(a) - weekdayOrder.indexOf(b));
   
   return (
-    <div>      <button
+    <div>
+      <button
         onClick={() => navigate('/programs')}
         className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
       >
         <ArrowLeft size={16} className="mr-1" />
         <span>Programlara Dön</span>
       </button>
-      
-      {activeFilter !== 'all' && (
-        <div className={`mb-4 px-4 py-2 rounded-lg flex items-center ${
-          activeFilter === 'completed' ? 'bg-green-100 text-green-800 border border-green-200' : 
-          'bg-blue-100 text-blue-800 border border-blue-200'
-        }`}>
-          {activeFilter === 'completed' ? (
-            <CheckCircle size={16} className="mr-2 text-green-600" />
-          ) : (
-            <Clock size={16} className="mr-2 text-blue-600" />
-          )}
-          <span className="font-medium">
-            {activeFilter === 'completed' ? 'Şu anda sadece tamamlanan ödevleri görüntülüyorsunuz' : 
-             'Şu anda sadece bekleyen ödevleri görüntülüyorsunuz'}
-          </span>
-          <button 
-            onClick={() => setActiveFilter('all')}
-            className="ml-auto text-xs font-semibold px-2 py-1 rounded bg-white hover:bg-gray-50"
-          >
-            Tüm ödevleri göster
-          </button>
-        </div>
-      )}
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Program Info Card */}
@@ -225,8 +182,9 @@ const ProgramDetail: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-        >          <AssignmentCalendar 
-            assignmentsByDay={activeFilter === 'all' ? assignmentsByDay : filteredAssignmentsByDay}
+        >
+          <AssignmentCalendar 
+            assignmentsByDay={assignmentsByDay}
             weekdayOrder={weekdayOrder}
           />
         </motion.div>
@@ -237,32 +195,20 @@ const ProgramDetail: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.5 }}
           className="lg:col-span-3 mb-6"
-        >          <ProgressSummary 
+        >
+          <ProgressSummary 
             totalAssignments={totalAssignments}
             completedAssignments={completedAssignments}
             className="bg-white shadow-md"
-            onFilterChange={setActiveFilter}
-            activeFilter={activeFilter}
           />
-          
-          {activeFilter !== 'all' && (
-            <div className="mt-2 flex justify-end">
-              <button
-                onClick={() => setActiveFilter('all')}
-                className="text-sm text-indigo-600 hover:text-indigo-800 flex items-center"
-              >
-                <ArrowLeft size={14} className="mr-1" />
-                Tüm ödevleri göster
-              </button>
-            </div>
-          )}
         </motion.div>
-          {/* Daily Assignments */}
+        
+        {/* Daily Assignments */}
         <div className="lg:col-span-3">
-          {filteredDays.length > 0 ? (
+          {days.length > 0 ? (
             <div className="space-y-6">
-              {filteredDays.map((day, dayIndex) => {
-                const dayAssignments = filteredAssignmentsByDay[day];
+              {days.map((day, dayIndex) => {
+                const dayAssignments = assignmentsByDay[day];
                 const completedCount = dayAssignments.filter(a => a.is_completed).length;
                 const dayPercentage = Math.round((completedCount / dayAssignments.length) * 100);
                 
@@ -273,7 +219,7 @@ const ProgramDetail: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: dayIndex * 0.1, duration: 0.5 }}
                   >
-                    <Card className={`p-6 ${activeFilter === 'pending' && dayAssignments.some(a => !a.is_completed) ? 'border-2 border-blue-200' : ''}`}>
+                    <Card className="p-6">
                       <div className="flex items-center justify-between mb-4">
                         <h2 className="text-xl font-semibold text-gray-900 flex items-center">
                           <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center mr-2">
@@ -304,28 +250,8 @@ const ProgramDetail: React.FC = () => {
           ) : (
             <div className="bg-white p-8 rounded-lg shadow-sm text-center">
               <Book size={48} className="mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-1">
-                {activeFilter === 'all' 
-                  ? 'Bu programda ödev yok' 
-                  : activeFilter === 'completed' 
-                    ? 'Tamamlanan ödev yok' 
-                    : 'Bekleyen ödev yok'}
-              </h3>
-              <p className="text-gray-600">
-                {activeFilter === 'all' 
-                  ? 'Henüz ödev eklenmemiş' 
-                  : activeFilter === 'completed' 
-                    ? 'Henüz hiçbir ödev tamamlanmamış' 
-                    : 'Tüm ödevler tamamlanmış görünüyor. Tebrikler!'}
-              </p>
-              {activeFilter !== 'all' && (
-                <button
-                  onClick={() => setActiveFilter('all')}
-                  className="mt-4 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-md hover:bg-indigo-200 transition-colors"
-                >
-                  Tüm ödevleri göster
-                </button>
-              )}
+              <h3 className="text-lg font-medium text-gray-900 mb-1">Bu programda ödev yok</h3>
+              <p className="text-gray-600">Henüz ödev eklenmemiş</p>
             </div>
           )}
         </div>
@@ -363,4 +289,4 @@ const ProgramDetail: React.FC = () => {
   );
 };
 
-export default ProgramDetail;
+export default ProgramDetailNew;

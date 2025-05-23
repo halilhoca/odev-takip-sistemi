@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { updatePublicAssignmentStatus } from '../../lib/publicSupabase';
-import AssignmentCard from '../../components/assignments/AssignmentCard';
+import AssignmentCardWrapper from '../../components/assignments/AssignmentCardWrapper';
+import ProgressSummary from '../../components/assignments/ProgressSummary';
 import Card from '../../components/ui/Card';
 import { Book, Calendar, Check, ClipboardList, User, X } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -128,40 +129,36 @@ const ProgramView: React.FC = () => {
       toast.error('Durum güncellenirken bir hata oluştu');
     }
   };
-  
   // Group assignments by completion status and day
   const completedAssignments = assignments.filter(a => a.is_completed);
   const incompleteAssignments = assignments.filter(a => !a.is_completed);
   
-  // Group assignments by day within each section
-  const groupByDay = (assignments: any[]) => {
-    const grouped: Record<string, any[]> = {};
-    assignments.forEach(assignment => {
-      if (!grouped[assignment.day]) {
-        grouped[assignment.day] = [];
-      }
-      grouped[assignment.day].push(assignment);
-    });
-    return grouped;
-  };
-  
-  const completedByDay = groupByDay(completedAssignments);
-  const incompleteByDay = groupByDay(incompleteAssignments);
-  
-  // Sort days
+  // Weekday order for sorting
   const weekdayOrder = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
-  const sortDays = (days: string[]) => {
-    return days.sort((a, b) => weekdayOrder.indexOf(a) - weekdayOrder.indexOf(b));
-  };
 
   // Gün sekmesi için state
   const allDays = Array.from(new Set(assignments.map(a => a.day))).sort((a, b) => weekdayOrder.indexOf(a) - weekdayOrder.indexOf(b));
   const [selectedDay, setSelectedDay] = useState<string>(allDays[0] || '');
 
-  // Seçili güne göre ödevleri filtrele
-  const dayAssignments = assignments.filter(a => a.day === selectedDay);
-  const completedDayAssignments = dayAssignments.filter(a => a.is_completed);
-  const incompleteDayAssignments = dayAssignments.filter(a => !a.is_completed);
+  // Yapılanlar ve Yapılmayanlar filtresi için state
+  const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'incomplete'>('all');
+  
+  // Filtre fonksiyonu
+  const getFilteredAssignments = () => {
+    const dayAssignmentsFiltered = assignments.filter(a => a.day === selectedDay);
+    
+    if (filterStatus === 'completed') {
+      return dayAssignmentsFiltered.filter(a => a.is_completed);
+    } else if (filterStatus === 'incomplete') {
+      return dayAssignmentsFiltered.filter(a => !a.is_completed);
+    } else {
+      return dayAssignmentsFiltered;
+    }
+  };
+  
+  // Seçili güne ve filtreye göre ödevleri al
+  const filteredAssignments = getFilteredAssignments();
+    // Artık bu değişkenleri kullanmıyoruz, filteredAssignments kullanıyoruz
 
   // Gün renkleri (program oluşturma ile aynı)
   const dayColors: Record<string, string> = {
@@ -246,6 +243,20 @@ const ProgramView: React.FC = () => {
           </div>
         </Card>
         
+        {/* Add detailed progress summary component */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="mb-6"
+        >
+          <ProgressSummary 
+            totalAssignments={assignments.length}
+            completedAssignments={completedAssignments.length}
+            className="bg-white shadow-md"
+          />
+        </motion.div>
+        
         {/* Günler - Büyük ve renkli butonlar */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-7 lg:grid-cols-7 sm:gap-6 w-full mb-8">
           {allDays.map((day, index) => (
@@ -270,35 +281,69 @@ const ProgramView: React.FC = () => {
             </motion.button>
           ))}
         </div>
-        
-        {/* Seçili günün ödevleri */}
+          {/* Filtre butonları */}
+        <div className="flex justify-center mb-6">
+          <div className="bg-white rounded-full shadow-md p-1 flex">
+            <button
+              onClick={() => setFilterStatus('all')}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                filterStatus === 'all' 
+                  ? 'bg-indigo-600 text-white shadow-sm' 
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              Tümü
+            </button>
+            <button
+              onClick={() => setFilterStatus('completed')}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                filterStatus === 'completed' 
+                  ? 'bg-green-600 text-white shadow-sm' 
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              Yapılanlar
+            </button>
+            <button
+              onClick={() => setFilterStatus('incomplete')}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                filterStatus === 'incomplete' 
+                  ? 'bg-red-600 text-white shadow-sm' 
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              Yapılmayanlar
+            </button>
+          </div>
+        </div>
+          {/* Seçili günün ödevleri */}
         <div className="grid grid-cols-1 gap-4">
-          {/* Tamamlanmamış ödevler */}
-          {incompleteDayAssignments.length > 0 && (
+          {filterStatus !== 'completed' && filteredAssignments.filter(a => !a.is_completed).length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <Card className="p-4 border-l-4 border-red-400 bg-gradient-to-br from-red-50 to-white shadow-md">
-                <h3 className="text-base font-semibold mb-3 flex items-center text-red-600">
-                  <X size={18} className="mr-2" />Tamamlanmamış Ödevler
+              <Card className="p-3 border-l-4 border-red-400 bg-gradient-to-br from-red-50 to-white shadow-md">
+                <h3 className="text-sm font-semibold mb-2 flex items-center text-red-600">
+                  <X size={16} className="mr-1.5" />Tamamlanmamış Ödevler
                 </h3>
-                <div className="space-y-2">
-                  {incompleteDayAssignments.map((assignment, index) => (
+                <div className="space-y-1.5">
+                  {filteredAssignments.filter(a => !a.is_completed).map((assignment, index) => (
                     <motion.div
                       key={assignment.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="cursor-pointer hover:bg-white hover:shadow-lg rounded-lg transition-all transform hover:scale-102 border border-gray-200 hover:border-red-200"
+                      className="cursor-pointer hover:bg-white hover:shadow rounded-lg transition-all border border-gray-100 hover:border-red-200"
                       onClick={() => handleToggleStatus(assignment.id, true)}
                     >
-                      <AssignmentCard
+                      <AssignmentCardWrapper
                         assignment={assignment}
                         index={index}
                         isStudent={true}
                         onToggleStatus={handleToggleStatus}
+                        variant="alternative"
                       />
                     </motion.div>
                   ))}
@@ -308,31 +353,32 @@ const ProgramView: React.FC = () => {
           )}
           
           {/* Tamamlanan ödevler */}
-          {completedDayAssignments.length > 0 && (
+          {filterStatus !== 'incomplete' && filteredAssignments.filter(a => a.is_completed).length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.1 }}
             >
-              <Card className="p-4 border-l-4 border-green-400 bg-gradient-to-br from-green-50 to-white shadow-md">
-                <h3 className="text-base font-semibold mb-3 flex items-center text-green-600">
-                  <Check size={18} className="mr-2" />Tamamlanan Ödevler
+              <Card className="p-3 border-l-4 border-green-400 bg-gradient-to-br from-green-50 to-white shadow-md">
+                <h3 className="text-sm font-semibold mb-2 flex items-center text-green-600">
+                  <Check size={16} className="mr-1.5" />Tamamlanan Ödevler
                 </h3>
-                <div className="space-y-2">
-                  {completedDayAssignments.map((assignment, index) => (
+                <div className="space-y-1.5">
+                  {filteredAssignments.filter(a => a.is_completed).map((assignment, index) => (
                     <motion.div
                       key={assignment.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="cursor-pointer hover:bg-white hover:shadow-lg rounded-lg transition-all transform hover:scale-102 border border-gray-200 hover:border-green-200"
+                      className="cursor-pointer hover:bg-white hover:shadow rounded-lg transition-all border border-gray-100 hover:border-green-200"
                       onClick={() => handleToggleStatus(assignment.id, false)}
                     >
-                      <AssignmentCard
+                      <AssignmentCardWrapper
                         assignment={assignment}
                         index={index}
                         isStudent={true}
                         onToggleStatus={handleToggleStatus}
+                        variant="alternative"
                       />
                     </motion.div>
                   ))}
@@ -340,9 +386,8 @@ const ProgramView: React.FC = () => {
               </Card>
             </motion.div>
           )}
-          
-          {/* Ödev yoksa */}
-          {incompleteDayAssignments.length === 0 && completedDayAssignments.length === 0 && (
+            {/* Ödev yoksa */}
+          {filteredAssignments.length === 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -350,15 +395,27 @@ const ProgramView: React.FC = () => {
             >
               <Card className="p-6 text-center text-gray-500 bg-gray-50 border-dashed border-2 border-gray-200 shadow-inner">
                 <Book size={32} className="mx-auto mb-2 text-gray-400" />
-                <p className="text-lg font-medium">Bu gün için ödev bulunmuyor</p>
-                <p className="text-sm text-gray-400 mt-1">Başka bir günü seçmeyi deneyin</p>
+                {filterStatus === 'all' ? (
+                  <>
+                    <p className="text-lg font-medium">Bu gün için ödev bulunmuyor</p>
+                    <p className="text-sm text-gray-400 mt-1">Başka bir günü seçmeyi deneyin</p>
+                  </>
+                ) : filterStatus === 'completed' ? (
+                  <>
+                    <p className="text-lg font-medium">Tamamlanan ödev bulunmuyor</p>
+                    <p className="text-sm text-gray-400 mt-1">Henüz hiç ödev tamamlamamışsınız</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-lg font-medium">Tamamlanmamış ödev bulunmuyor</p>
+                    <p className="text-sm text-gray-400 mt-1">Tüm ödevleri tamamlamışsınız, tebrikler!</p>
+                  </>
+                )}
               </Card>
             </motion.div>
           )}
-        </div>
-
-        {/* Motivasyon mesajı */}
-        {completedDayAssignments.length > 0 && incompleteDayAssignments.length === 0 && (
+        </div>        {/* Motivasyon mesajı */}
+        {filteredAssignments.length > 0 && filteredAssignments.every(a => a.is_completed) && filterStatus !== 'completed' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

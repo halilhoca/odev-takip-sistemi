@@ -7,7 +7,7 @@ import Modal from '../../components/ui/Modal';
 import BookCard from '../../components/books/BookCard';
 import { 
   ArrowLeft, Book, ClipboardList, Trash2, User, Calendar, Check, 
-  School, Phone, Users, GraduationCap, MapPin, BookOpen, PlusCircle
+  School, Phone, Users, GraduationCap, BookOpen, PlusCircle, Clock
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -33,6 +33,7 @@ const StudentDetail: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAddBookModalOpen, setIsAddBookModalOpen] = useState(false);
   const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
+  const [activeFilter, setActiveFilter] = useState<'all' | 'completed' | 'pending'>('all');
   
   useEffect(() => {
     if (user && studentId) {
@@ -151,6 +152,24 @@ const StudentDetail: React.FC = () => {
   
   // Öğrenciye henüz atanmamış kitapları filtrele
   const availableBooks = books.filter(book => !studentBookIds.includes(book.id));
+
+  // Programları filtreleme
+  const filteredPrograms = studentPrograms.filter((program: any) => {
+    if (activeFilter === 'all') return true;
+    
+    const total = program.assignments.length;
+    const completed = program.assignments.filter((a: any) => a.is_completed).length;
+    
+    if (activeFilter === 'completed') {
+      // Tamamlanma oranı %100 olan programlar
+      return total > 0 && completed === total;
+    } else if (activeFilter === 'pending') {
+      // Tamamlanma oranı %100 olmayan programlar
+      return total > 0 && completed < total;
+    }
+    
+    return true;
+  });
 
   if (!student) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -382,15 +401,53 @@ const StudentDetail: React.FC = () => {
               </Link>
             </div>
             
-            {studentPrograms.length > 0 ? (
+            {/* Filtreleme Butonları */}
+            <div className="flex gap-2 mb-4">
+              <button
+                onClick={() => setActiveFilter('all')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md flex-1 transition-colors ${
+                  activeFilter === 'all' 
+                    ? 'bg-blue-100 text-blue-700 border border-blue-300' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Tümü
+              </button>
+              <button
+                onClick={() => setActiveFilter('completed')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md flex-1 transition-colors ${
+                  activeFilter === 'completed' 
+                    ? 'bg-green-100 text-green-700 border border-green-300' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <Check size={14} className="inline mr-1" />
+                Tamamlanan
+              </button>              <button
+                onClick={() => setActiveFilter('pending')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md flex-1 transition-colors ${
+                  activeFilter === 'pending' 
+                    ? 'bg-orange-100 text-orange-700 border-2 border-orange-400 shadow-sm' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <Clock size={14} className="inline mr-1" />
+                Bekleyen
+              </button>
+            </div>
+            
+            {filteredPrograms.length > 0 ? (
               <div className="space-y-3">
-                {studentPrograms.map((program: any) => {
+                {filteredPrograms.map((program: any) => {
                   const total = program.assignments.length;
                   const completed = program.assignments.filter((a: any) => a.is_completed).length;
                   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
-                  return (
-                    <Link to={`/programs/${program.id}`} key={program.id}>
-                      <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition cursor-pointer">
+                  return (                    <Link to={`/programs/${program.id}`} key={program.id}>
+                      <div className={`flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition cursor-pointer ${
+                        activeFilter === 'pending' && program.assignments.some((a: any) => !a.is_completed) 
+                          ? 'border-orange-300 bg-orange-50/60 shadow-sm' 
+                          : ''
+                      }`}>
                         <div>
                           <div className="font-medium text-gray-900">{program.title}</div>
                           <div className="flex items-center text-xs text-gray-500 mt-1">
@@ -418,10 +475,17 @@ const StudentDetail: React.FC = () => {
                   );
                 })}
               </div>
-            ) : (
-              <div className="text-center py-6">
+            ) : (              <div className="text-center py-6">
                 <ClipboardList size={36} className="mx-auto text-gray-400 mb-3" />
-                <p className="text-gray-600">Bu öğrenciye ait program yok</p>
+                <p className={`text-gray-600 ${activeFilter === 'pending' ? 'font-medium text-orange-600' : ''}`}>
+                  {activeFilter === 'all' ? 'Bu öğrenciye ait program yok' :
+                   activeFilter === 'completed' ? 'Tamamlanan program yok' : 'Bekleyen program yok'}
+                </p>
+                {activeFilter === 'pending' && (
+                  <p className="text-xs text-orange-500 mt-2">
+                    Tüm programlar tamamlanmış görünüyor. Tebrikler!
+                  </p>
+                )}
               </div>
             )}
           </div>
