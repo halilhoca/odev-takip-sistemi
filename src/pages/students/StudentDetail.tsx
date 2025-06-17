@@ -518,7 +518,6 @@ const StudentDetail: React.FC = () => {
       console.error('Error fetching reading status:', error);
     }
   };
-
   // Kitabı okunmuş olarak işaretleme fonksiyonu
   const markBookAsRead = async (bookId: string) => {
     if (!studentId) return;
@@ -537,11 +536,42 @@ const StudentDetail: React.FC = () => {
 
       if (error) throw error;
       
+      // Kitap bilgisini bul
+      const book = books.find(b => b.id === bookId);
+      
+      // Optimistic update - state'i hemen güncelle
+      setReadingStatusData(prevData => {
+        const existingIndex = prevData.findIndex((item: any) => item.book_id === bookId);
+        
+        const newItem = {
+          id: Date.now().toString(), // Temporary ID
+          student_id: studentId,
+          book_id: bookId,
+          is_read: true,
+          reading_date: new Date().toISOString().split('T')[0],
+          books: book
+        };
+        
+        if (existingIndex >= 0) {
+          // Update existing
+          const updated = [...prevData];
+          updated[existingIndex] = { ...updated[existingIndex], ...newItem };
+          return updated;
+        } else {
+          // Add new
+          return [...prevData, newItem];
+        }
+      });
+      
       toast.success('Kitap okunmuş olarak işaretlendi!');
-      fetchReadingStatus(); // Listeyi yenile
+      
+      // Background'da gerçek veriyi de fetch et
+      fetchReadingStatus();
     } catch (error) {
       console.error('Error marking book as read:', error);
       toast.error('Kitap işaretlenirken bir hata oluştu');
+      // Hata durumunda veriyi yeniden fetch et
+      fetchReadingStatus();
     }
   };
 
