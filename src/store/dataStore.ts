@@ -57,7 +57,7 @@ interface DataState {
     parent_phone?: string,
     field?: string
   ) => Promise<Student | null>;
-  addBook: (userId: string, title: string, author?: string) => Promise<Book | null>;
+  addBook: (userId: string, title: string, author?: string, isStoryBook?: boolean) => Promise<Book | null>;
   assignBook: (studentId: string, bookId: string) => Promise<void>;
   addProgram: (userId: string, title: string, isScheduled: boolean) => Promise<Program | null>;
   addAssignment: (programId: string, studentId: string, bookId: string, 
@@ -230,11 +230,10 @@ export const useDataStore = create<DataState>((set, get) => ({
       return null;
     }
   },
-  
-  addBook: async (userId: string, title: string, author?: string) => {
+    addBook: async (userId: string, title: string, author?: string, isStoryBook?: boolean) => {
     set({ loading: true });
     try {
-      const { data, error } = await createBook(userId, title, author);
+      const { data, error } = await createBook(userId, title, author, isStoryBook);
       
       if (error) {
         set({ error: error.message, loading: false });

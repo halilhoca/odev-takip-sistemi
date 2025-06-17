@@ -23,6 +23,7 @@ export interface Book {
   user_id: string;
   title: string;
   author?: string; // Optional author field
+  is_story_book?: boolean; // Hikaye kitabı mı?
   created_at: string;
 }
 
@@ -31,6 +32,18 @@ export interface StudentBook {
   student_id: string;
   book_id: string;
   created_at: string;
+}
+
+export interface ReadingStatus {
+  id: string;
+  student_id: string;
+  book_id: string;
+  is_read: boolean;
+  reading_date?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  books?: Book; // Join ile gelen kitap bilgisi
 }
 
 export interface Program {

@@ -57,8 +57,8 @@ const StudentDetail: React.FC = () => {
   const [isAddBookModalOpen, setIsAddBookModalOpen] = useState(false);
   const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
   const [activeFilter, setActiveFilter] = useState<'all' | 'completed' | 'pending'>('all');
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [questionStatsData, setQuestionStatsData] = useState<any[]>([]);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);  const [questionStatsData, setQuestionStatsData] = useState<any[]>([]);
+  const [readingStatusData, setReadingStatusData] = useState<any[]>([]);
   const [coachNotes, setCoachNotes] = useState<string>('');
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isCopyingLink, setIsCopyingLink] = useState(false);
@@ -68,10 +68,10 @@ const StudentDetail: React.FC = () => {
     if (user && studentId) {
       fetchStudents(user.id);
       fetchBooks(user.id);
-      fetchStudentBooks(studentId);
-      fetchStudentAssignments(studentId);
+      fetchStudentBooks(studentId);      fetchStudentAssignments(studentId);
       fetchQuestionStats(); // Soru istatistiklerini de fetch et
       fetchCoachNotes(); // Koç notlarını da fetch et
+      fetchReadingStatus(); // Reading status'u da fetch et
     }
   }, [user, studentId, fetchStudents, fetchBooks, fetchStudentBooks, fetchStudentAssignments]);
   
@@ -492,6 +492,56 @@ const StudentDetail: React.FC = () => {
     } catch (error) {
       console.error('Error saving coach notes:', error);
       toast.error('Koç notları kaydedilirken bir hata oluştu');
+    }  };
+
+  // Reading status'u fetch etme fonksiyonu
+  const fetchReadingStatus = async () => {
+    if (!studentId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('reading_status')
+        .select(`
+          *,
+          books(id, title, author, is_story_book)
+        `)
+        .eq('student_id', studentId);
+
+      if (error) {
+        console.error('Error fetching reading status:', error);
+        return;
+      }
+
+      console.log('Reading status data:', data);
+      setReadingStatusData(data || []);
+    } catch (error) {
+      console.error('Error fetching reading status:', error);
+    }
+  };
+
+  // Kitabı okunmuş olarak işaretleme fonksiyonu
+  const markBookAsRead = async (bookId: string) => {
+    if (!studentId) return;
+    
+    try {
+      const { error } = await supabase
+        .from('reading_status')
+        .upsert({
+          student_id: studentId,
+          book_id: bookId,
+          is_read: true,
+          reading_date: new Date().toISOString().split('T')[0]
+        }, {
+          onConflict: 'student_id,book_id'
+        });
+
+      if (error) throw error;
+      
+      toast.success('Kitap okunmuş olarak işaretlendi!');
+      fetchReadingStatus(); // Listeyi yenile
+    } catch (error) {
+      console.error('Error marking book as read:', error);
+      toast.error('Kitap işaretlenirken bir hata oluştu');
     }
   };
 
@@ -1062,8 +1112,72 @@ const StudentDetail: React.FC = () => {
                 <BookOpen className="mx-auto h-12 w-12 text-gray-400 mb-3" />
                 <p className="text-gray-600">Henüz soru çözme istatistiği bulunmuyor.</p>
                 <p className="text-sm text-gray-500 mt-1">Öğrenci program linkinden kitap bazında soru sayılarını girebilir.</p>
+              </div>            )}
+
+            {/* Okunan Hikaye Kitapları */}
+            <div className="bg-white p-4 rounded-lg border">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center">
+                <BookOpen className="mr-2" size={20} />
+                Okunan Hikaye Kitapları
+              </h3>
+              
+              {readingStatusData.filter((item: any) => item.books?.is_story_book && item.is_read).length > 0 ? (
+                <div className="grid gap-3">
+                  {readingStatusData
+                    .filter((item: any) => item.books?.is_story_book && item.is_read)
+                    .map((item: any, index: number) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-green-50 rounded-lg border-l-4 border-green-500">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-800">{item.books?.title}</h4>
+                          {item.books?.author && (
+                            <p className="text-sm text-gray-600">Yazar: {item.books.author}</p>
+                          )}
+                          {item.reading_date && (
+                            <p className="text-xs text-gray-500">
+                              Okunma Tarihi: {new Date(item.reading_date).toLocaleDateString('tr-TR')}
+                            </p>
+                          )}
+                          {item.notes && (
+                            <p className="text-xs text-gray-600 mt-1 italic">"{item.notes}"</p>
+                          )}
+                        </div>
+                        <div className="text-green-600">
+                          <Check size={20} />
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-gray-500">
+                  <BookOpen className="mx-auto h-12 w-12 text-gray-400 mb-2" />
+                  <p>Henüz okunmuş hikaye kitabı bulunmuyor.</p>
+                  <p className="text-sm mt-1">Hikaye kitabı ekleyip, manuel olarak okunmuş olarak işaretlemeniz gerekiyor.</p>
+                </div>
+              )}
+
+              {/* Hikaye Kitaplarını Okunmuş Olarak İşaretleme */}
+              <div className="mt-4 pt-4 border-t">
+                <h4 className="text-md font-medium text-gray-700 mb-2">Hikaye Kitabını Okunmuş Olarak İşaretle:</h4>
+                <div className="flex flex-wrap gap-2">
+                  {books
+                    .filter(book => book.is_story_book && !readingStatusData.some((rs: any) => rs.book_id === book.id && rs.is_read))
+                    .map(book => (
+                      <button
+                        key={book.id}
+                        onClick={() => markBookAsRead(book.id)}
+                        className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm hover:bg-blue-200 transition-colors"
+                      >
+                        {book.title}
+                      </button>
+                    ))}
+                </div>
+                {books.filter(book => book.is_story_book).length === 0 && (
+                  <p className="text-sm text-gray-500">Henüz hikaye kitabı eklenmemiş.</p>
+                )}
               </div>
-            )}            {/* Koç Notları */}
+            </div>
+
+            {/* Koç Notları */}
             <div className="bg-white p-4 rounded-lg border">
               <h3 className="text-lg font-semibold mb-3 text-gray-800 flex items-center">
                 <FileText className="mr-2" size={20} />

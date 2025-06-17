@@ -121,7 +121,7 @@ export async function createStudent(
   return { data, error };
 }
 
-export async function createBook(userId: string, title: string, author?: string) {
+export async function createBook(userId: string, title: string, author?: string, isStoryBook?: boolean) {
   const bookData: any = { 
     user_id: userId, 
     title 
@@ -129,6 +129,10 @@ export async function createBook(userId: string, title: string, author?: string)
   
   if (author) {
     bookData.author = author;
+  }
+  
+  if (isStoryBook !== undefined) {
+    bookData.is_story_book = isStoryBook;
   }
   
   const { data, error } = await supabase

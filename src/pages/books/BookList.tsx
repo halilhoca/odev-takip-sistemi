@@ -22,9 +22,9 @@ const BookList: React.FC = () => {
     removeBook
   } = useDataStore();
   
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newBookTitle, setNewBookTitle] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);  const [newBookTitle, setNewBookTitle] = useState('');
   const [newBookAuthor, setNewBookAuthor] = useState('');
+  const [isStoryBook, setIsStoryBook] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -44,16 +44,16 @@ const BookList: React.FC = () => {
     setIsSubmitting(true);
     
     if (user) {
-      const book = await addBook(user.id, newBookTitle, newBookAuthor);
+      const book = await addBook(user.id, newBookTitle, newBookAuthor, isStoryBook);
       
       if (book) {
         if (selectedStudentId) {
           await assignBook(selectedStudentId, book.id);
         }
         
-        toast.success('Kitap başarıyla eklendi');
-        setNewBookTitle('');
+        toast.success('Kitap başarıyla eklendi');        setNewBookTitle('');
         setNewBookAuthor('');
+        setIsStoryBook(false);
         setSelectedStudentId('');
         setIsModalOpen(false);
       } else {
@@ -154,8 +154,20 @@ const BookList: React.FC = () => {
             value={newBookAuthor}
             onChange={(e) => setNewBookAuthor(e.target.value)}
             placeholder="Yazar adını girin"
-            fullWidth
-          />
+            fullWidth          />
+          
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="isStoryBook"
+              checked={isStoryBook}
+              onChange={(e) => setIsStoryBook(e.target.checked)}
+              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+            />
+            <label htmlFor="isStoryBook" className="text-sm font-medium text-gray-700">
+              Bu bir hikaye kitabıdır
+            </label>
+          </div>
           
           <Select
             label="Öğrenciye Ata (İsteğe bağlı)"

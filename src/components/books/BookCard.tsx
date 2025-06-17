@@ -1,7 +1,7 @@
 import React from 'react';
 import Card from '../ui/Card';
 import { Book } from '../../types';
-import { Book as BookIcon, Calendar } from 'lucide-react';
+import { Book as BookIcon, Calendar, BookOpen } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Button from '../ui/Button';
 
@@ -34,8 +34,14 @@ const BookCard: React.FC<BookCardProps> = ({ book, index, onSelect, onDelete }) 
               )}
             </div>
           </div>
-          
-          <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2">
+            {book.is_story_book && (
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                <BookOpen size={12} className="mr-1" />
+                Hikaye
+              </span>
+            )}
+            
             {onDelete && (
               <Button
                 variant="danger"
