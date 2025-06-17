@@ -47,8 +47,10 @@ const CreateProgram: React.FC = () => {
   const { 
     students, 
     books, 
+    studentBooks,
     fetchStudents, 
     fetchBooks,
+    fetchStudentBooks,
     addProgram,
     addAssignment
   } = useDataStore();
@@ -78,6 +80,13 @@ const CreateProgram: React.FC = () => {
       fetchBooks(user.id);
     }
   }, [user, fetchStudents, fetchBooks]);
+
+  // Seçilen öğrenci değiştiğinde o öğrencinin kitaplarını çek
+  useEffect(() => {
+    if (selectedStudent) {
+      fetchStudentBooks(selectedStudent);
+    }
+  }, [selectedStudent, fetchStudentBooks]);
   
   const handleAddAssignment = () => {
     if (!selectedDay) return;
@@ -186,10 +195,22 @@ const CreateProgram: React.FC = () => {
     label: student.name
   }));
   
-  const bookOptions = books.map(book => ({
-    value: book.id,
-    label: book.title
-  }));
+  // Debug bilgisi
+  console.log('🔍 CreateProgram State:', { 
+    selectedStudent, 
+    studentsCount: students.length,
+    booksCount: books.length, 
+    studentBooksCount: studentBooks.length,
+    studentBooksData: studentBooks.slice(0, 3) // İlk 3 öğe
+  });
+  
+  // Sadece seçili öğrenciye atanan kitapları göster
+  const bookOptions = selectedStudent && studentBooks.length > 0 
+    ? studentBooks.map(studentBook => ({
+        value: studentBook.books.id,
+        label: studentBook.books.title
+      }))
+    : [];
   
   if (!user) return null;
   

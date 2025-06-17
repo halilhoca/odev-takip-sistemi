@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { publicSupabase } from '../../lib/publicSupabase';
-import { BookOpen, FileText, GraduationCap, Calendar } from 'lucide-react';
+import { BookOpen, FileText, GraduationCap, Calendar, Download } from 'lucide-react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -33,7 +35,6 @@ interface StudentData {
 
 const PublicReport: React.FC = () => {
   const { studentId } = useParams<{ studentId: string; reportId: string }>();  const [student, setStudent] = useState<StudentData | null>(null);  const [questionStatsData, setQuestionStatsData] = useState<any[]>([]);
-  const [readingStatusData, setReadingStatusData] = useState<any[]>([]);
   const [coachNotes, setCoachNotes] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,9 +42,10 @@ const PublicReport: React.FC = () => {
   useEffect(() => {
     fetchStudentData();
   }, [studentId]);
-
   const fetchStudentData = async () => {
     if (!studentId) return;
+
+    console.log('Fetching data for studentId:', studentId);
 
     try {
       setLoading(true);
@@ -85,22 +87,9 @@ const PublicReport: React.FC = () => {
         .eq('student_id', studentId)
         .order('updated_at', { ascending: false })
         .limit(1)
-        .single();if (notesError && notesError.code !== 'PGRST116') {
+        .single();      if (notesError && notesError.code !== 'PGRST116') {
         console.error('Error fetching coach notes:', notesError);      } else if (coachNotesData) {
         setCoachNotes(coachNotesData.notes || '');
-      }      // Reading status'u al
-      const { data: readingData, error: readingError } = await publicSupabase
-        .from('reading_status')
-        .select(`
-          *,
-          books(id, title, author, is_story_book)
-        `)
-        .eq('student_id', studentId);
-
-      if (readingError && readingError.code !== 'PGRST116') {
-        console.error('Error fetching reading status:', readingError);
-      } else if (readingData) {
-        setReadingStatusData(readingData || []);
       }
 
     } catch (error: any) {
@@ -212,7 +201,86 @@ const PublicReport: React.FC = () => {
           stepSize: 1,
         },
       },
-    },
+    },  };
+  const generatePDF = async () => {
+    if (!student) return;
+
+    try {
+      // PDF butonunu gizle
+      const pdfButton = document.querySelector('button') as HTMLElement;
+      if (pdfButton) pdfButton.style.display = 'none';
+
+      // Sayfanın screenshot'ını al
+      const element = document.getElementById('pdf-content');
+      if (!element) return;
+
+      const canvas = await html2canvas(element, {
+        scale: 2, // Yüksek kalite için
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: '#f9fafb', // bg-gray-50
+        width: element.scrollWidth,
+        height: element.scrollHeight,
+      });
+
+      // PDF oluştur
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const canvasAspectRatio = canvas.height / canvas.width;
+      const pdfAspectRatio = pdfHeight / pdfWidth;
+
+      let imgWidth, imgHeight, xOffset = 0, yOffset = 0;
+
+      if (canvasAspectRatio > pdfAspectRatio) {
+        // Canvas daha uzun - yüksekliğe göre ölçekle
+        imgHeight = pdfHeight;
+        imgWidth = imgHeight / canvasAspectRatio;
+        xOffset = (pdfWidth - imgWidth) / 2;
+      } else {
+        // Canvas daha geniş - genişliğe göre ölçekle
+        imgWidth = pdfWidth;
+        imgHeight = imgWidth * canvasAspectRatio;
+        yOffset = (pdfHeight - imgHeight) / 2;
+      }
+
+      // Eğer sayfa çok uzunsa birden fazla sayfaya böl
+      if (imgHeight > pdfHeight) {
+        const totalPages = Math.ceil(imgHeight / pdfHeight);
+        const singlePageHeight = canvas.height / totalPages;
+
+        for (let page = 0; page < totalPages; page++) {
+          if (page > 0) pdf.addPage();
+
+          const sourceY = page * singlePageHeight;
+          const pageCanvas = document.createElement('canvas');
+          const pageCtx = pageCanvas.getContext('2d');
+          
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = singlePageHeight;
+          
+          if (pageCtx) {
+            pageCtx.drawImage(canvas, 0, -sourceY);
+            const pageImgData = pageCanvas.toDataURL('image/png');
+            pdf.addImage(pageImgData, 'PNG', xOffset, 0, imgWidth, pdfHeight);
+          }
+        }
+      } else {
+        pdf.addImage(imgData, 'PNG', xOffset, yOffset, imgWidth, imgHeight);
+      }
+
+      // PDF'i indir
+      pdf.save(`${student.name}-raporu.pdf`);
+
+      // PDF butonunu tekrar göster
+      if (pdfButton) pdfButton.style.display = 'flex';
+
+    } catch (error) {
+      console.error('PDF oluşturulurken hata:', error);
+      alert('PDF oluşturulurken bir hata oluştu.');
+    }
   };
 
   if (loading) {
@@ -237,9 +305,8 @@ const PublicReport: React.FC = () => {
       </div>
     );
   }
-
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div id="pdf-content" className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
@@ -250,11 +317,19 @@ const PublicReport: React.FC = () => {
                 <h1 className="text-2xl font-bold text-gray-900">{student.name} - Öğrenci Raporu</h1>
                 <p className="text-gray-600">Akademik Performans Raporu</p>
               </div>
-            </div>
-            <div className="text-right text-sm text-gray-500">
-              <div className="flex items-center">
-                <Calendar className="h-4 w-4 mr-1" />
-                {new Date().toLocaleDateString('tr-TR')}
+            </div>            <div className="flex items-center space-x-4">
+              <button
+                onClick={generatePDF}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                PDF İndir
+              </button>
+              <div className="text-right text-sm text-gray-500">
+                <div className="flex items-center">
+                  <Calendar className="h-4 w-4 mr-1" />
+                  {new Date().toLocaleDateString('tr-TR')}
+                </div>
               </div>
             </div>
           </div>
@@ -366,51 +441,13 @@ const PublicReport: React.FC = () => {
                   ))}
                 </div>
               </div>
-            )}
-          </div>
+            )}          </div>
         ) : (
           <div className="bg-white rounded-lg shadow-lg p-8 text-center">
             <BookOpen className="mx-auto h-16 w-16 text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Henüz Soru İstatistiği Yok</h3>
             <p className="text-gray-600">Bu öğrenci için henüz soru çözme verisi bulunmuyor.</p>
           </div>        )}
-
-        {/* Okunan Hikaye Kitapları */}
-        {readingStatusData.filter((item: any) => item.books?.is_story_book && item.is_read).length > 0 && (
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-              <BookOpen className="mr-3 h-6 w-6 text-green-600" />
-              Okunan Hikaye Kitapları
-            </h2>
-            <div className="grid gap-4">
-              {readingStatusData
-                .filter((item: any) => item.books?.is_story_book && item.is_read)
-                .map((item: any, index: number) => (
-                  <div key={index} className="flex items-center justify-between p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-800 text-lg">{item.books?.title}</h3>
-                      {item.books?.author && (
-                        <p className="text-gray-600 mt-1">Yazar: {item.books.author}</p>
-                      )}
-                      {item.reading_date && (
-                        <p className="text-sm text-gray-500 mt-1">
-                          Okunma Tarihi: {new Date(item.reading_date).toLocaleDateString('tr-TR')}
-                        </p>
-                      )}
-                      {item.notes && (
-                        <p className="text-sm text-gray-600 mt-2 italic">"{item.notes}"</p>
-                      )}
-                    </div>
-                    <div className="text-green-600 ml-4">
-                      <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                      </svg>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </div>
-        )}
 
         {/* Koç Notları */}
         {coachNotes && (

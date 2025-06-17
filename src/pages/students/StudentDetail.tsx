@@ -517,13 +517,14 @@ const StudentDetail: React.FC = () => {
     } catch (error) {
       console.error('Error fetching reading status:', error);
     }
-  };
-  // Kitabı okunmuş olarak işaretleme fonksiyonu
+  };  // Kitabı okunmuş olarak işaretleme fonksiyonu
   const markBookAsRead = async (bookId: string) => {
     if (!studentId) return;
     
+    console.log('🔍 markBookAsRead called:', { studentId, bookId });
+    
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('reading_status')
         .upsert({
           student_id: studentId,
@@ -532,7 +533,10 @@ const StudentDetail: React.FC = () => {
           reading_date: new Date().toISOString().split('T')[0]
         }, {
           onConflict: 'student_id,book_id'
-        });
+        })
+        .select();
+
+      console.log('✅ Upsert result:', { data, error });
 
       if (error) throw error;
       

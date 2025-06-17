@@ -81,9 +81,14 @@ const AssignmentCardAlt: React.FC<AssignmentCardProps> = ({
                 <LayoutList size={12} className="text-gray-600" />
               </div>
               <div className="flex-1">
-                <div className="flex justify-between">
-                  <span className="text-xs font-medium text-gray-700">Sayfa: {assignment.page_start} - {assignment.page_end}</span>
-                  <span className="text-[10px] text-gray-500">{totalPages} sayfa</span>
+                <div className="flex flex-col">
+                  {assignment.note && (
+                    <div className="bg-gradient-to-r from-blue-100 to-blue-50 border-l-4 border-blue-500 p-3 rounded-r-lg shadow-sm">
+                      <span className="text-base font-semibold text-blue-800 leading-relaxed block">
+                        � {assignment.note}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
                   <div 
@@ -93,22 +98,6 @@ const AssignmentCardAlt: React.FC<AssignmentCardProps> = ({
                 </div>
               </div>
             </div>
-
-            {/* Notes section - daha küçük ve kompakt */}
-            {assignment.note && (
-              <div className="flex items-start gap-2">
-                <div className="bg-yellow-100 p-1 rounded-md mt-0.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-yellow-600">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                  </svg>
-                </div>
-                <div className="text-xs text-gray-700 flex-1">
-                  <span className="font-medium text-gray-600">Not:</span>
-                  <p className="text-gray-600 line-clamp-2">{assignment.note}</p>
-                </div>
-              </div>
-            )}
 
             {/* Time section - daha küçük */}
             {assignment.time && (

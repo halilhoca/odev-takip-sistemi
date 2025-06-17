@@ -225,9 +225,14 @@ const ProgramView: React.FC = () => {
   
   // Weekday order for sorting
   const weekdayOrder = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
-
   // Gün sekmesi için state
   const allDays = Array.from(new Set(assignments.map(a => a.day))).sort((a, b) => weekdayOrder.indexOf(a) - weekdayOrder.indexOf(b));
+  console.log('🔍 ProgramView Debug:', { 
+    assignments: assignments.length, 
+    allDays, 
+    programId,
+    assignments: assignments.map(a => ({ id: a.id, day: a.day, title: a.books?.title }))
+  });
   const [selectedDay, setSelectedDay] = useState<string>(allDays[0] || '');
 
   // Yapılanlar ve Yapılmayanlar filtresi için state
@@ -519,12 +524,18 @@ const ProgramView: React.FC = () => {
                 </h3>
                 <div className="space-y-4">
                   {filteredAssignments.map((assignment) => (
-                    <div key={assignment.id} className="bg-white p-4 rounded-lg border border-gray-200">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3">
-                        <h4 className="font-medium text-gray-800">
-                          {assignment.books?.title} - Sayfa {assignment.page_start}-{assignment.page_end}
-                        </h4>
-                        <div className="text-sm text-gray-500 mt-1 sm:mt-0">
+                    <div key={assignment.id} className="bg-white p-4 rounded-lg border border-gray-200">                      <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-800 mb-1">
+                            {assignment.books?.title}
+                          </h4>
+                          {assignment.note && (
+                            <p className="text-sm text-gray-600 italic">
+                              "{assignment.note}"
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-500 mt-1 sm:mt-0 flex-shrink-0">
                           Toplam: {(questionStats[assignment.id]?.correct || 0) + 
                                   (questionStats[assignment.id]?.wrong || 0) + 
                                   (questionStats[assignment.id]?.blank || 0)} soru
@@ -535,13 +546,12 @@ const ProgramView: React.FC = () => {
                         <div>
                           <label className="block text-sm font-medium text-green-700 mb-1">
                             ✅ Doğru
-                          </label>
-                          <input
+                          </label>                          <input
                             type="number"
                             min="0"
-                            value={questionStats[assignment.id]?.correct || 0}
+                            value={questionStats[assignment.id]?.correct === 0 ? '' : questionStats[assignment.id]?.correct ?? ''}
                             onChange={(e) => {
-                              const value = parseInt(e.target.value) || 0;
+                              const value = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
                               setQuestionStats(current => ({
                                 ...current,
                                 [assignment.id]: {
@@ -566,11 +576,9 @@ const ProgramView: React.FC = () => {
                             ❌ Yanlış
                           </label>
                           <input
-                            type="number"
-                            min="0"
-                            value={questionStats[assignment.id]?.wrong || 0}
+                            type="number"                            min="0"                            value={questionStats[assignment.id]?.wrong === 0 ? '' : questionStats[assignment.id]?.wrong ?? ''}
                             onChange={(e) => {
-                              const value = parseInt(e.target.value) || 0;
+                              const value = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
                               setQuestionStats(current => ({
                                 ...current,
                                 [assignment.id]: {
@@ -596,10 +604,9 @@ const ProgramView: React.FC = () => {
                           </label>
                           <input
                             type="number"
-                            min="0"
-                            value={questionStats[assignment.id]?.blank || 0}
+                            min="0"                            value={questionStats[assignment.id]?.blank === 0 ? '' : questionStats[assignment.id]?.blank ?? ''}
                             onChange={(e) => {
-                              const value = parseInt(e.target.value) || 0;
+                              const value = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
                               setQuestionStats(current => ({
                                 ...current,
                                 [assignment.id]: {
