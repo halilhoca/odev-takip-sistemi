@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
+import { publicSupabase } from '../../lib/publicSupabase';
 import { BookOpen, FileText, GraduationCap, Calendar } from 'lucide-react';
 import {
   Chart as ChartJS,
@@ -32,8 +32,8 @@ interface StudentData {
 }
 
 const PublicReport: React.FC = () => {
-  const { studentId } = useParams<{ studentId: string; reportId: string }>();
-  const [student, setStudent] = useState<StudentData | null>(null);  const [questionStatsData, setQuestionStatsData] = useState<any[]>([]);
+  const { studentId } = useParams<{ studentId: string; reportId: string }>();  const [student, setStudent] = useState<StudentData | null>(null);  const [questionStatsData, setQuestionStatsData] = useState<any[]>([]);
+  const [readingStatusData, setReadingStatusData] = useState<any[]>([]);
   const [coachNotes, setCoachNotes] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,9 +47,8 @@ const PublicReport: React.FC = () => {
 
     try {
       setLoading(true);
-      
-      // Öğrenci bilgilerini al
-      const { data: studentData, error: studentError } = await supabase
+        // Öğrenci bilgilerini al
+      const { data: studentData, error: studentError } = await publicSupabase
         .from('students')
         .select('id, name, email, school, grade, field')
         .eq('id', studentId)
@@ -60,7 +59,7 @@ const PublicReport: React.FC = () => {
       setStudent(studentData);
 
       // Soru istatistiklerini al
-      const { data: assignments, error: assignmentsError } = await supabase
+      const { data: assignments, error: assignmentsError } = await publicSupabase
         .from('assignments')
         .select(`
           id,
@@ -79,18 +78,29 @@ const PublicReport: React.FC = () => {
         assignment.correct_answers !== null || 
         assignment.wrong_answers !== null || 
         assignment.blank_answers !== null
-      );      setQuestionStatsData(filteredAssignments);
-
-      // Koç notlarını al
-      const { data: coachNotesData, error: notesError } = await supabase
+      );      setQuestionStatsData(filteredAssignments);      // Koç notlarını al
+      const { data: coachNotesData, error: notesError } = await publicSupabase
         .from('coach_notes')
         .select('notes')
         .eq('student_id', studentId)
         .order('updated_at', { ascending: false })
         .limit(1)
-        .single();      if (notesError && notesError.code !== 'PGRST116') {
+        .single();if (notesError && notesError.code !== 'PGRST116') {
         console.error('Error fetching coach notes:', notesError);      } else if (coachNotesData) {
         setCoachNotes(coachNotesData.notes || '');
+      }      // Reading status'u al
+      const { data: readingData, error: readingError } = await publicSupabase
+        .from('reading_status')
+        .select(`
+          *,
+          books(id, title, author, is_story_book)
+        `)
+        .eq('student_id', studentId);
+
+      if (readingError && readingError.code !== 'PGRST116') {
+        console.error('Error fetching reading status:', readingError);
+      } else if (readingData) {
+        setReadingStatusData(readingData || []);
       }
 
     } catch (error: any) {
@@ -364,6 +374,43 @@ const PublicReport: React.FC = () => {
             <h3 className="text-lg font-medium text-gray-900 mb-2">Henüz Soru İstatistiği Yok</h3>
             <p className="text-gray-600">Bu öğrenci için henüz soru çözme verisi bulunmuyor.</p>
           </div>        )}
+
+        {/* Okunan Hikaye Kitapları */}
+        {readingStatusData.filter((item: any) => item.books?.is_story_book && item.is_read).length > 0 && (
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+              <BookOpen className="mr-3 h-6 w-6 text-green-600" />
+              Okunan Hikaye Kitapları
+            </h2>
+            <div className="grid gap-4">
+              {readingStatusData
+                .filter((item: any) => item.books?.is_story_book && item.is_read)
+                .map((item: any, index: number) => (
+                  <div key={index} className="flex items-center justify-between p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-800 text-lg">{item.books?.title}</h3>
+                      {item.books?.author && (
+                        <p className="text-gray-600 mt-1">Yazar: {item.books.author}</p>
+                      )}
+                      {item.reading_date && (
+                        <p className="text-sm text-gray-500 mt-1">
+                          Okunma Tarihi: {new Date(item.reading_date).toLocaleDateString('tr-TR')}
+                        </p>
+                      )}
+                      {item.notes && (
+                        <p className="text-sm text-gray-600 mt-2 italic">"{item.notes}"</p>
+                      )}
+                    </div>
+                    <div className="text-green-600 ml-4">
+                      <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                      </svg>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
 
         {/* Koç Notları */}
         {coachNotes && (

@@ -3,7 +3,6 @@ import {
   Student, 
   Book, 
   Program, 
-  Assignment, 
   Stats
 } from '../types';
 import { 
@@ -23,7 +22,8 @@ import {
   getStudentBooks,
   getStudentAssignments,
   updateAssignmentStatus,
-  getAssignmentsByProgram
+  getAssignmentsByProgram,
+  updateReadingStatus
 } from '../lib/supabase';
 
 interface DataState {
@@ -71,6 +71,7 @@ interface DataState {
   setCurrentProgram: (program: Program | null) => void;
   
   updateAssignment: (assignmentId: string, isCompleted: boolean) => Promise<void>;
+  markBookAsRead: (studentId: string, bookId: string, readingDate?: string, notes?: string) => Promise<void>;
   
   removeStudent: (studentId: string) => Promise<void>;
   removeBook: (bookId: string) => Promise<void>;
@@ -397,6 +398,24 @@ export const useDataStore = create<DataState>((set, get) => ({
       );
       
       set({ studentAssignments: updatedAssignments, loading: false });
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error.message : 'An unexpected error occurred', 
+        loading: false 
+      });
+    }
+  },
+    markBookAsRead: async (studentId, bookId, readingDate, notes) => {
+    set({ loading: true });
+    try {
+      const { error } = await updateReadingStatus(studentId, bookId, true, readingDate, notes);
+      
+      if (error) {
+        set({ error: error.message, loading: false });
+        return;
+      }
+      
+      set({ loading: false });
     } catch (error) {
       set({ 
         error: error instanceof Error ? error.message : 'An unexpected error occurred', 
