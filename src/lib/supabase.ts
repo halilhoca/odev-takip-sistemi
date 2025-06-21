@@ -121,7 +121,7 @@ export async function createStudent(
   return { data, error };
 }
 
-export async function createBook(userId: string, title: string, author?: string, isStoryBook?: boolean) {
+export async function createBook(userId: string, title: string, author?: string, isStoryBook?: boolean, subject?: string) {
   const bookData: any = { 
     user_id: userId, 
     title 
@@ -135,11 +135,23 @@ export async function createBook(userId: string, title: string, author?: string,
     bookData.is_story_book = isStoryBook;
   }
   
+  if (subject) {
+    bookData.subject = subject;
+  }
+  
+  console.log('📚 Supabase: Kitap verisi hazırlandı:', bookData);
+  
   const { data, error } = await supabase
     .from('books')
     .insert([bookData])
     .select()
     .single();
+  
+  if (error) {
+    console.error('❌ Supabase: Kitap ekleme hatası:', error);
+  } else {
+    console.log('✅ Supabase: Kitap başarıyla eklendi:', data);
+  }
   
   return { data, error };
 }
@@ -209,13 +221,12 @@ export async function createAssignment(
   return { data, error };
 }
 
-export async function getAssignmentsByProgram(programId: string) {
-  const { data, error } = await supabase
+export async function getAssignmentsByProgram(programId: string) {  const { data, error } = await supabase
     .from('assignments')
     .select(`
       *,
       students (name),
-      books (title)
+      books (title, subject)
     `)
     .eq('program_id', programId)
     .order('day');
@@ -229,7 +240,7 @@ export async function getStudentAssignments(studentId: string) {
     .select(`
       *,
       programs (title, is_scheduled),
-      books (title)
+      books (title, subject)
     `)
     .eq('student_id', studentId)
     .order('created_at', { ascending: false });

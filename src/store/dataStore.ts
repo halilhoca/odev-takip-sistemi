@@ -57,7 +57,7 @@ interface DataState {
     parent_phone?: string,
     field?: string
   ) => Promise<Student | null>;
-  addBook: (userId: string, title: string, author?: string, isStoryBook?: boolean) => Promise<Book | null>;
+  addBook: (userId: string, title: string, author?: string, isStoryBook?: boolean, subject?: string) => Promise<Book | null>;
   assignBook: (studentId: string, bookId: string) => Promise<void>;
   addProgram: (userId: string, title: string, isScheduled: boolean) => Promise<Program | null>;
   addAssignment: (programId: string, studentId: string, bookId: string, 
@@ -230,24 +230,27 @@ export const useDataStore = create<DataState>((set, get) => ({
       });
       return null;
     }
-  },
-    addBook: async (userId: string, title: string, author?: string, isStoryBook?: boolean) => {
+  },  addBook: async (userId: string, title: string, author?: string, isStoryBook?: boolean, subject?: string) => {
     set({ loading: true });
     try {
-      const { data, error } = await createBook(userId, title, author, isStoryBook);
+      console.log('🏪 DataStore: Kitap oluşturuluyor:', { userId, title, author, isStoryBook, subject });
+      const { data, error } = await createBook(userId, title, author, isStoryBook, subject);
       
       if (error) {
+        console.error('❌ DataStore: Kitap oluşturma hatası:', error);
         set({ error: error.message, loading: false });
         return null;
       }
       
+      console.log('✅ DataStore: Kitap başarıyla oluşturuldu:', data);
       const updatedBooks = [...get().books, data];
       set({ books: updatedBooks, loading: false });
       return data;
     } catch (error) {
+      console.error('❌ DataStore: Beklenmeyen hata:', error);
       set({ 
         error: error instanceof Error ? error.message : 'An unexpected error occurred', 
-        loading: false 
+        loading: false
       });
       return null;
     }

@@ -23,14 +23,16 @@ const BookCard: React.FC<BookCardProps> = ({ book, index, onSelect, onDelete }) 
         hoverable={!!onSelect}
         className="p-4 h-full relative"
         onClick={() => onSelect && onSelect(book)}
-      >
-        <div className="flex items-center mb-2">
+      >        <div className="flex items-center mb-2">
           <div className="flex items-center flex-1">
             <BookIcon size={20} className="text-indigo-600 mr-2" />
             <div className="flex-1">
               <h3 className="font-medium text-gray-900">{book.title}</h3>
               {book.author && (
                 <p className="text-sm text-gray-600">Yazar: {book.author}</p>
+              )}
+              {book.subject && (
+                <p className="text-sm text-gray-500">Ders: {book.subject}</p>
               )}
             </div>
           </div>

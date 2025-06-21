@@ -31,13 +31,12 @@ const ProgramView: React.FC = () => {
       
       setLoading(true);
       
-      try {
-        // First fetch assignments to get student info
+      try {        // First fetch assignments to get student info
         const { data: assignmentsData, error: assignmentsError } = await supabase
           .from('assignments')
           .select(`
             *,
-            books (title),
+            books (title, subject),
             students (name)
           `)
           .eq('program_id', programId)
@@ -226,12 +225,11 @@ const ProgramView: React.FC = () => {
   // Weekday order for sorting
   const weekdayOrder = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
   // Gün sekmesi için state
-  const allDays = Array.from(new Set(assignments.map(a => a.day))).sort((a, b) => weekdayOrder.indexOf(a) - weekdayOrder.indexOf(b));
-  console.log('🔍 ProgramView Debug:', { 
-    assignments: assignments.length, 
+  const allDays = Array.from(new Set(assignments.map(a => a.day))).sort((a, b) => weekdayOrder.indexOf(a) - weekdayOrder.indexOf(b));  console.log('🔍 ProgramView Debug:', { 
+    assignmentCount: assignments.length, 
     allDays, 
     programId,
-    assignments: assignments.map(a => ({ id: a.id, day: a.day, title: a.books?.title }))
+    assignmentDetails: assignments.map(a => ({ id: a.id, day: a.day, title: a.books?.title }))
   });
   const [selectedDay, setSelectedDay] = useState<string>(allDays[0] || '');
 

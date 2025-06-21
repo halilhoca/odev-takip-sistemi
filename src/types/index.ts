@@ -24,6 +24,7 @@ export interface Book {
   title: string;
   author?: string; // Optional author field
   is_story_book?: boolean; // Hikaye kitabı mı?
+  subject?: string; // Ders adı (Matematik, Türkçe, Fen vb.)
   created_at: string;
 }
 

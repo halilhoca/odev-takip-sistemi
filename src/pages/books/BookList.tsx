@@ -21,9 +21,10 @@ const BookList: React.FC = () => {
     assignBook,
     removeBook
   } = useDataStore();
-  
-  const [isModalOpen, setIsModalOpen] = useState(false);  const [newBookTitle, setNewBookTitle] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newBookTitle, setNewBookTitle] = useState('');
   const [newBookAuthor, setNewBookAuthor] = useState('');
+  const [newBookSubject, setNewBookSubject] = useState('');
   const [isStoryBook, setIsStoryBook] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,7 +35,6 @@ const BookList: React.FC = () => {
       fetchStudents(user.id);
     }
   }, [user, fetchBooks, fetchStudents]);
-  
   const handleAddBook = async () => {
     if (!newBookTitle) {
       toast.error('Kitap başlığı gereklidir');
@@ -43,25 +43,44 @@ const BookList: React.FC = () => {
     
     setIsSubmitting(true);
     
-    if (user) {
-      const book = await addBook(user.id, newBookTitle, newBookAuthor, isStoryBook);
-      
-      if (book) {
-        if (selectedStudentId) {
-          await assignBook(selectedStudentId, book.id);
-        }
+    try {
+      if (user) {
+        console.log('📚 Kitap ekleniyor:', { 
+          title: newBookTitle, 
+          author: newBookAuthor, 
+          subject: newBookSubject, 
+          isStoryBook,
+          selectedStudent: selectedStudentId 
+        });
         
-        toast.success('Kitap başarıyla eklendi');        setNewBookTitle('');
-        setNewBookAuthor('');
-        setIsStoryBook(false);
-        setSelectedStudentId('');
-        setIsModalOpen(false);
-      } else {
-        toast.error('Kitap eklenirken hata oluştu');
+        const book = await addBook(user.id, newBookTitle, newBookAuthor, isStoryBook, newBookSubject);
+        
+        if (book) {
+          console.log('✅ Kitap başarıyla eklendi:', book);
+          
+          if (selectedStudentId) {
+            console.log('👨‍🎓 Öğrenciye atanıyor:', selectedStudentId);
+            await assignBook(selectedStudentId, book.id);
+          }
+          
+          toast.success('Kitap başarıyla eklendi');
+          setNewBookTitle('');
+          setNewBookAuthor('');
+          setNewBookSubject('');
+          setIsStoryBook(false);
+          setSelectedStudentId('');
+          setIsModalOpen(false);
+        } else {
+          console.error('❌ Kitap ekleme başarısız');
+          toast.error('Kitap eklenirken hata oluştu');
+        }
       }
+    } catch (error) {
+      console.error('❌ Kitap ekleme hatası:', error);
+      toast.error(`Kitap eklenirken hata: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`);
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    setIsSubmitting(false);
   };
 
   // Kitap silme fonksiyonu
@@ -139,8 +158,7 @@ const BookList: React.FC = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title="Yeni Kitap Ekle"
-      >
-        <div className="space-y-4">
+      >        <div className="space-y-4">
           <Input
             label="Kitap Başlığı"
             value={newBookTitle}
@@ -154,7 +172,16 @@ const BookList: React.FC = () => {
             value={newBookAuthor}
             onChange={(e) => setNewBookAuthor(e.target.value)}
             placeholder="Yazar adını girin"
-            fullWidth          />
+            fullWidth
+          />
+          
+          <Input
+            label="Ders"
+            value={newBookSubject}
+            onChange={(e) => setNewBookSubject(e.target.value)}
+            placeholder="Ders adını girin (ör: Matematik, Türkçe, Fen)"
+            fullWidth
+          />
           
           <div className="flex items-center space-x-2">
             <input

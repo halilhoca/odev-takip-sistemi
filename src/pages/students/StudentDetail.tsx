@@ -79,8 +79,7 @@ const StudentDetail: React.FC = () => {
   const fetchQuestionStats = async () => {
     if (!studentId) return;
     
-    try {
-      const { data: assignments, error } = await supabase
+    try {      const { data: assignments, error } = await supabase
         .from('assignments')
         .select(`
           id,
@@ -88,7 +87,7 @@ const StudentDetail: React.FC = () => {
           wrong_answers,
           blank_answers,
           programs(title),
-          books(title)
+          books(title, subject)
         `)
         .eq('student_id', studentId);
 
@@ -337,49 +336,46 @@ const StudentDetail: React.FC = () => {
       setIsCopyingLink(false);
     }
   };
-  
-  // Grafik verileri hazırlama - kitap bazında toplama
+  // Grafik verileri hazırlama - ders bazında toplama
   const prepareChartData = () => {
     console.log('questionStatsData:', questionStatsData);
     if (!questionStatsData.length) return null;
 
-    // Kitap bazında verileri toplama
-    const bookStats: Record<string, { correct: number; wrong: number; blank: number }> = {};
+    // Ders bazında verileri toplama
+    const subjectStats: Record<string, { correct: number; wrong: number; blank: number }> = {};
     
     questionStatsData.forEach((assignment: any) => {
-      const bookTitle = assignment.books?.title || 'Bilinmeyen Kitap';
+      const subject = assignment.books?.subject || 'Belirtilmemiş Ders';
       
-      if (!bookStats[bookTitle]) {
-        bookStats[bookTitle] = { correct: 0, wrong: 0, blank: 0 };
+      if (!subjectStats[subject]) {
+        subjectStats[subject] = { correct: 0, wrong: 0, blank: 0 };
       }
       
-      bookStats[bookTitle].correct += assignment.correct_answers || 0;
-      bookStats[bookTitle].wrong += assignment.wrong_answers || 0;
-      bookStats[bookTitle].blank += assignment.blank_answers || 0;
+      subjectStats[subject].correct += assignment.correct_answers || 0;
+      subjectStats[subject].wrong += assignment.wrong_answers || 0;
+      subjectStats[subject].blank += assignment.blank_answers || 0;
     });
 
-    console.log('bookStats:', bookStats);
-
-    const chartData = {
-      labels: Object.keys(bookStats),
+    console.log('subjectStats:', subjectStats);    const chartData = {
+      labels: Object.keys(subjectStats),
       datasets: [
         {
           label: 'Doğru',
-          data: Object.values(bookStats).map(stats => stats.correct),
+          data: Object.values(subjectStats).map(stats => stats.correct),
           backgroundColor: 'rgba(34, 197, 94, 0.8)',
           borderColor: 'rgba(34, 197, 94, 1)',
           borderWidth: 1,
         },
         {
           label: 'Yanlış',
-          data: Object.values(bookStats).map(stats => stats.wrong),
+          data: Object.values(subjectStats).map(stats => stats.wrong),
           backgroundColor: 'rgba(239, 68, 68, 0.8)',
           borderColor: 'rgba(239, 68, 68, 1)',
           borderWidth: 1,
         },
         {
           label: 'Boş',
-          data: Object.values(bookStats).map(stats => stats.blank),
+          data: Object.values(subjectStats).map(stats => stats.blank),
           backgroundColor: 'rgba(156, 163, 175, 0.8)',
           borderColor: 'rgba(156, 163, 175, 1)',
           borderWidth: 1,
@@ -387,35 +383,33 @@ const StudentDetail: React.FC = () => {
       ],
     };
 
-    return { chartData, bookStats };
-  };
-
-  // Kitap bazında istatistikler
-  const getBookStatistics = () => {
+    return { chartData, subjectStats };
+  };  // Ders bazında istatistikler
+  const getSubjectStatistics = () => {
     if (!questionStatsData.length) return [];
 
-    // Kitap bazında verileri toplama
-    const bookStats: Record<string, { correct: number; wrong: number; blank: number }> = {};
+    // Ders bazında verileri toplama
+    const subjectStats: Record<string, { correct: number; wrong: number; blank: number }> = {};
     
     questionStatsData.forEach((assignment: any) => {
-      const bookTitle = assignment.books?.title || 'Bilinmeyen Kitap';
+      const subject = assignment.books?.subject || 'Belirtilmemiş Ders';
       
-      if (!bookStats[bookTitle]) {
-        bookStats[bookTitle] = { correct: 0, wrong: 0, blank: 0 };
+      if (!subjectStats[subject]) {
+        subjectStats[subject] = { correct: 0, wrong: 0, blank: 0 };
       }
       
-      bookStats[bookTitle].correct += assignment.correct_answers || 0;
-      bookStats[bookTitle].wrong += assignment.wrong_answers || 0;
-      bookStats[bookTitle].blank += assignment.blank_answers || 0;
+      subjectStats[subject].correct += assignment.correct_answers || 0;
+      subjectStats[subject].wrong += assignment.wrong_answers || 0;
+      subjectStats[subject].blank += assignment.blank_answers || 0;
     });
 
-    return Object.keys(bookStats).map(bookTitle => {
-      const stats = bookStats[bookTitle];
+    return Object.keys(subjectStats).map(subject => {
+      const stats = subjectStats[subject];
       const totalQuestions = stats.correct + stats.wrong + stats.blank;
       const successRate = totalQuestions > 0 ? Math.round((stats.correct / totalQuestions) * 100) : 0;
       
       return {
-        bookTitle,
+        subject,
         totalQuestions,
         successRate,
         correct: stats.correct,
@@ -434,7 +428,7 @@ const StudentDetail: React.FC = () => {
       },
       title: {
         display: true,
-        text: 'Kitap Bazında Soru Çözme İstatistikleri',
+        text: 'Ders Bazında Soru Çözme İstatistikleri',
       },
     },
     scales: {
@@ -1056,9 +1050,8 @@ const StudentDetail: React.FC = () => {
             </div>
 
             {/* Soru İstatistikleri Grafiği */}
-            {questionStatsData.length > 0 ? (
-              <div className="bg-white p-4 rounded-lg border">
-                <h3 className="text-lg font-semibold mb-4 text-gray-800">Kitap Bazında Soru Çözme İstatistikleri</h3>
+            {questionStatsData.length > 0 ? (              <div className="bg-white p-4 rounded-lg border">
+                <h3 className="text-lg font-semibold mb-4 text-gray-800">Ders Bazında Soru Çözme İstatistikleri</h3>
                 <div className="h-80">
                   {prepareChartData() && <Bar data={prepareChartData()!.chartData} options={chartOptions} />}
                 </div>
@@ -1090,38 +1083,37 @@ const StudentDetail: React.FC = () => {
                     </div>
                     <div className="text-gray-600">Toplam Boş</div>
                   </div>
-                </div>
-                
-                {/* Kitap Bazında Detaylı İstatistikler */}
-                {getBookStatistics().length > 0 && (
+                </div>                
+                {/* Ders Bazında Detaylı İstatistikler */}
+                {getSubjectStatistics().length > 0 && (
                   <div className="mt-6 space-y-4">
-                    <h4 className="text-md font-semibold text-gray-800">Kitap Bazında Detaylı İstatistikler</h4>
+                    <h4 className="text-md font-semibold text-gray-800">Ders Bazında Detaylı İstatistikler</h4>
                     <div className="grid gap-4">
-                      {getBookStatistics().map((book: any, index: number) => (
+                      {getSubjectStatistics().map((subject: any, index: number) => (
                         <div key={index} className="bg-gray-50 p-4 rounded-lg border">
                           <div className="flex justify-between items-start mb-2">
-                            <h5 className="font-medium text-gray-800">{book.bookTitle}</h5>
+                            <h5 className="font-medium text-gray-800">{subject.subject}</h5>
                             <div className="text-right">
-                              <div className="text-lg font-bold text-blue-600">{book.successRate}%</div>
+                              <div className="text-lg font-bold text-blue-600">{subject.successRate}%</div>
                               <div className="text-xs text-gray-500">Başarı Oranı</div>
                             </div>
                           </div>
                           
                           <div className="grid grid-cols-4 gap-3 text-sm">
                             <div className="text-center p-2 bg-blue-100 rounded">
-                              <div className="font-semibold text-blue-700">{book.totalQuestions}</div>
+                              <div className="font-semibold text-blue-700">{subject.totalQuestions}</div>
                               <div className="text-blue-600">Toplam Soru</div>
                             </div>
                             <div className="text-center p-2 bg-green-100 rounded">
-                              <div className="font-semibold text-green-700">{book.correct}</div>
+                              <div className="font-semibold text-green-700">{subject.correct}</div>
                               <div className="text-green-600">Doğru</div>
                             </div>
                             <div className="text-center p-2 bg-red-100 rounded">
-                              <div className="font-semibold text-red-700">{book.wrong}</div>
+                              <div className="font-semibold text-red-700">{subject.wrong}</div>
                               <div className="text-red-600">Yanlış</div>
                             </div>
                             <div className="text-center p-2 bg-gray-100 rounded">
-                              <div className="font-semibold text-gray-700">{book.blank}</div>
+                              <div className="font-semibold text-gray-700">{subject.blank}</div>
                               <div className="text-gray-600">Boş</div>
                             </div>
                           </div>
@@ -1131,7 +1123,7 @@ const StudentDetail: React.FC = () => {
                             <div className="w-full bg-gray-200 rounded-full h-2">
                               <div 
                                 className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                                style={{ width: `${book.successRate}%` }}
+                                style={{ width: `${subject.successRate}%` }}
                               ></div>
                             </div>
                           </div>
