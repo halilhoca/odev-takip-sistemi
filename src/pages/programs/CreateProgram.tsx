@@ -26,7 +26,7 @@ const dayColors = {
 };
 
 interface DayAssignment {
-  bookId: string;
+  bookId?: string; // Artık zorunlu değil
   pageStart: number;
   pageEnd: number;
   note?: string;
@@ -90,10 +90,13 @@ const CreateProgram: React.FC = () => {
   
   const handleAddAssignment = () => {
     if (!selectedDay) return;
-    if (!newAssignment.bookId) {
-      toast.error('Lütfen bir kitap seçin');
+    
+    // Kitap seçimi artık zorunlu değil, ancak kitap seçilmişse veya not varsa eklemeye izin ver
+    if (!newAssignment.bookId && !newAssignment.note?.trim()) {
+      toast.error('Lütfen bir kitap seçin veya not yazın');
       return;
     }
+    
     // Sayfa aralığı veya not
     let pageStart = 1, pageEnd = 1, note = '';
     if (newAssignment.note) {
@@ -114,7 +117,7 @@ const CreateProgram: React.FC = () => {
       [selectedDay]: [
         ...prev[selectedDay],
         {
-          bookId: newAssignment.bookId,
+          bookId: newAssignment.bookId || undefined, // Boşsa undefined
           pageStart,
           pageEnd,
           note,
@@ -166,7 +169,7 @@ const CreateProgram: React.FC = () => {
             const { error } = await createAssignment(
               program.id,
               selectedStudent,
-              assignment.bookId,
+              assignment.bookId || null, // Undefined ise null yap
               assignment.pageStart,
               assignment.pageEnd,
               day,
@@ -174,8 +177,14 @@ const CreateProgram: React.FC = () => {
               assignment.note
             );
             if (error) {
-              toast.error('Supabase error: ' + JSON.stringify(error));
-              console.error('Supabase assignment ekleme hatası:', error);
+              // Kullanıcı dostu hata mesajları
+              if (error.code === '23502' && error.message.includes('book_id')) {
+                toast.error('Kitap seçmeden not eklemek için veritabanı güncellemesi gerekiyor. Lütfen yöneticiyle iletişime geçin.');
+              } else {
+                toast.error('Program oluştururken hata: ' + (error.message || 'Bilinmeyen hata'));
+              }
+              console.error('Assignment ekleme hatası:', error);
+              return; // Hata durumunda durdur
             }
           }
         }
@@ -345,7 +354,7 @@ const CreateProgram: React.FC = () => {
             </h3>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 mb-4">
               <Select
-                label="Kitap"
+                label="Kitap (İsteğe bağlı)"
                 options={bookOptions}
                 value={newAssignment.bookId}
                 onChange={(value) => setNewAssignment(prev => ({ ...prev, bookId: value }))}
@@ -386,11 +395,15 @@ const CreateProgram: React.FC = () => {
                     <Card key={index} className="p-3 sm:p-4 rounded-xl shadow bg-indigo-50">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
                         <div>
-                          <p className="font-medium text-gray-900 text-sm sm:text-base">{book?.title}</p>
+                          {book ? (
+                            <p className="font-medium text-gray-900 text-sm sm:text-base">{book.title}</p>
+                          ) : (
+                            <p className="font-medium text-gray-900 text-sm sm:text-base">Genel Not</p>
+                          )}
                           <p className="text-xs sm:text-sm text-gray-600">
                             {assignment.note
                               ? assignment.note
-                              : `Sayfa: ${assignment.pageStart} - ${assignment.pageEnd}`}
+                              : book ? `Sayfa: ${assignment.pageStart} - ${assignment.pageEnd}` : 'Not'}
                           </p>
                           {assignment.time && (
                             <p className="text-xs sm:text-sm text-gray-600 flex items-center">

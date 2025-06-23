@@ -67,19 +67,18 @@ const PublicReport: React.FC = () => {
           wrong_answers,
           blank_answers,
           programs(title),
-          books(title, subject, is_story_book)
+          books(title, subject)
         `)
         .eq('student_id', studentId);
 
       if (assignmentsError) throw assignmentsError;
 
-      // Sadece soru istatistiği olan ve hikaye kitabı olmayan kayıtları filtrele
+      // Sadece soru istatistiği olan kayıtları filtrele
       const filteredAssignments = (assignments || []).filter((assignment: any) => 
-        (assignment.correct_answers !== null || 
-         assignment.wrong_answers !== null || 
-         assignment.blank_answers !== null) &&
-        !assignment.books?.is_story_book // Hikaye kitaplarını hariç tut
-      );setQuestionStatsData(filteredAssignments);      // Koç notlarını al
+        assignment.correct_answers !== null || 
+        assignment.wrong_answers !== null || 
+        assignment.blank_answers !== null
+      );      setQuestionStatsData(filteredAssignments);      // Koç notlarını al
       const { data: coachNotesData, error: notesError } = await publicSupabase
         .from('coach_notes')
         .select('notes')

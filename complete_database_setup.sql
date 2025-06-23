@@ -4,6 +4,9 @@ ALTER TABLE books ADD COLUMN is_story_book BOOLEAN DEFAULT FALSE;
 -- Books tablosuna subject kolonunu ekleyelim
 ALTER TABLE books ADD COLUMN subject TEXT;
 
+-- Assignments tablosundaki book_id'yi nullable yap (kitap seçmeden not ekleyebilmek için)
+ALTER TABLE assignments ALTER COLUMN book_id DROP NOT NULL;
+
 -- Coach notes tablosunu oluşturalım
 CREATE TABLE IF NOT EXISTS coach_notes (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,

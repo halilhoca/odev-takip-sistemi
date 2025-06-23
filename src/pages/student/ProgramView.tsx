@@ -507,9 +507,8 @@ const ProgramView: React.FC = () => {
               </Card>
             </motion.div>
           )}
-          
-          {/* Soru Çözme İstatistikleri Bölümü */}
-          {filteredAssignments.length > 0 && (
+            {/* Soru Çözme İstatistikleri Bölümü - Hikaye kitapları hariç */}
+          {filteredAssignments.filter(assignment => !assignment.books?.is_story_book).length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -521,7 +520,9 @@ const ProgramView: React.FC = () => {
                   📊 {selectedDay} Günü Soru Çözme İstatistikleri
                 </h3>
                 <div className="space-y-4">
-                  {filteredAssignments.map((assignment) => (
+                  {filteredAssignments
+                    .filter(assignment => !assignment.books?.is_story_book) // Hikaye kitaplarını filtrele
+                    .map((assignment) => (
                     <div key={assignment.id} className="bg-white p-4 rounded-lg border border-gray-200">                      <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-3">
                         <div className="flex-1">
                           <h4 className="font-medium text-gray-800 mb-1">

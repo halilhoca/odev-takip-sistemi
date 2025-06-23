@@ -61,8 +61,8 @@ const AssignmentCardAlt: React.FC<AssignmentCardProps> = ({
                 <div className={`p-1.5 rounded-full ${assignment.is_completed ? 'bg-green-100' : 'bg-blue-100'}`}>
                   <BookOpen size={14} className={assignment.is_completed ? 'text-green-600' : 'text-blue-600'} />
                 </div>
-                <h3 className="font-bold text-gray-800 text-base leading-tight truncate" title={assignment.books?.title || assignment.book_title}>
-                  {assignment.books?.title || assignment.book_title}
+                <h3 className="font-bold text-gray-800 text-base leading-tight truncate" title={assignment.books?.title || assignment.book_title || 'Genel Not'}>
+                  {assignment.books?.title || assignment.book_title || 'Genel Not'}
                 </h3>
               </div>
             </div>

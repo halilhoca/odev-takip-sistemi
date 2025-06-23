@@ -238,7 +238,15 @@ export const useDataStore = create<DataState>((set, get) => ({
       
       if (error) {
         console.error('❌ DataStore: Kitap oluşturma hatası:', error);
+        console.error('❌ DataStore: Hata kodu:', error.code);
+        console.error('❌ DataStore: Hata mesajı:', error.message);
         set({ error: error.message, loading: false });
+        return null;
+      }
+      
+      if (!data) {
+        console.error('❌ DataStore: Data null döndü');
+        set({ error: 'Kitap oluşturulamadı - data null', loading: false });
         return null;
       }
       

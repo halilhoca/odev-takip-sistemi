@@ -91,13 +91,12 @@ const StudentDetail: React.FC = () => {
         `)
         .eq('student_id', studentId);
 
-      if (error) throw error;
-
-      // Frontend'de sadece soru istatistiği olan kayıtları filtrele
+      if (error) throw error;      // Frontend'de sadece soru istatistiği olan kayıtları filtrele ve hikaye kitaplarını hariç tut
       const filteredAssignments = (assignments || []).filter((assignment: any) => 
-        assignment.correct_answers !== null || 
-        assignment.wrong_answers !== null || 
-        assignment.blank_answers !== null
+        (assignment.correct_answers !== null || 
+         assignment.wrong_answers !== null || 
+         assignment.blank_answers !== null) &&
+        !assignment.books?.is_story_book // Hikaye kitaplarını hariç tut
       );
 
       console.log('Fetched assignments:', assignments);
@@ -335,20 +334,21 @@ const StudentDetail: React.FC = () => {
     } finally {
       setIsCopyingLink(false);
     }
-  };
-  // Grafik verileri hazırlama - ders bazında toplama
+  };  // Grafik verileri hazırlama - ders bazında toplama
   const prepareChartData = () => {
     console.log('questionStatsData:', questionStatsData);
     if (!questionStatsData.length) return null;
 
-    // Ders bazında verileri toplama
+    // Ders bazında verileri toplama - hikaye kitaplarını hariç tut
     const subjectStats: Record<string, { correct: number; wrong: number; blank: number }> = {};
     
-    questionStatsData.forEach((assignment: any) => {
-      const subject = assignment.books?.subject || 'Belirtilmemiş Ders';
-      
-      if (!subjectStats[subject]) {
-        subjectStats[subject] = { correct: 0, wrong: 0, blank: 0 };
+    questionStatsData
+      .filter((assignment: any) => !assignment.books?.is_story_book) // Hikaye kitaplarını filtrele
+      .forEach((assignment: any) => {
+        const subject = assignment.books?.subject || 'Belirtilmemiş Ders';
+        
+        if (!subjectStats[subject]) {
+          subjectStats[subject] = { correct: 0, wrong: 0, blank: 0 };
       }
       
       subjectStats[subject].correct += assignment.correct_answers || 0;
@@ -388,20 +388,22 @@ const StudentDetail: React.FC = () => {
   const getSubjectStatistics = () => {
     if (!questionStatsData.length) return [];
 
-    // Ders bazında verileri toplama
+    // Ders bazında verileri toplama - hikaye kitaplarını hariç tut
     const subjectStats: Record<string, { correct: number; wrong: number; blank: number }> = {};
     
-    questionStatsData.forEach((assignment: any) => {
-      const subject = assignment.books?.subject || 'Belirtilmemiş Ders';
-      
-      if (!subjectStats[subject]) {
-        subjectStats[subject] = { correct: 0, wrong: 0, blank: 0 };
-      }
-      
-      subjectStats[subject].correct += assignment.correct_answers || 0;
-      subjectStats[subject].wrong += assignment.wrong_answers || 0;
-      subjectStats[subject].blank += assignment.blank_answers || 0;
-    });
+    questionStatsData
+      .filter((assignment: any) => !assignment.books?.is_story_book) // Hikaye kitaplarını filtrele
+      .forEach((assignment: any) => {
+        const subject = assignment.books?.subject || 'Belirtilmemiş Ders';
+        
+        if (!subjectStats[subject]) {
+          subjectStats[subject] = { correct: 0, wrong: 0, blank: 0 };
+        }
+        
+        subjectStats[subject].correct += assignment.correct_answers || 0;
+        subjectStats[subject].wrong += assignment.wrong_answers || 0;
+        subjectStats[subject].blank += assignment.blank_answers || 0;
+      });
 
     return Object.keys(subjectStats).map(subject => {
       const stats = subjectStats[subject];
@@ -1055,35 +1057,42 @@ const StudentDetail: React.FC = () => {
                 <div className="h-80">
                   {prepareChartData() && <Bar data={prepareChartData()!.chartData} options={chartOptions} />}
                 </div>
-                
-                {/* Özet İstatistikler */}
+                  {/* Özet İstatistikler */}
                 <div className="mt-6 grid grid-cols-4 gap-4 text-sm">
                   <div className="text-center p-2 bg-blue-100 rounded">
                     <div className="font-semibold text-blue-700">
-                      {questionStatsData.reduce((sum: number, item: any) => 
-                        sum + (item.correct_answers || 0) + (item.wrong_answers || 0) + (item.blank_answers || 0), 0)}
+                      {questionStatsData
+                        .filter((item: any) => !item.books?.is_story_book) // Hikaye kitaplarını hariç tut
+                        .reduce((sum: number, item: any) => 
+                          sum + (item.correct_answers || 0) + (item.wrong_answers || 0) + (item.blank_answers || 0), 0)}
                     </div>
                     <div className="text-blue-600">Toplam Soru</div>
                   </div>
                   <div className="text-center p-2 bg-green-100 rounded">
                     <div className="font-semibold text-green-700">
-                      {questionStatsData.reduce((sum: number, item: any) => sum + (item.correct_answers || 0), 0)}
+                      {questionStatsData
+                        .filter((item: any) => !item.books?.is_story_book) // Hikaye kitaplarını hariç tut
+                        .reduce((sum: number, item: any) => sum + (item.correct_answers || 0), 0)}
                     </div>
                     <div className="text-green-600">Toplam Doğru</div>
                   </div>
                   <div className="text-center p-2 bg-red-100 rounded">
                     <div className="font-semibold text-red-700">
-                      {questionStatsData.reduce((sum: number, item: any) => sum + (item.wrong_answers || 0), 0)}
+                      {questionStatsData
+                        .filter((item: any) => !item.books?.is_story_book) // Hikaye kitaplarını hariç tut
+                        .reduce((sum: number, item: any) => sum + (item.wrong_answers || 0), 0)}
                     </div>
                     <div className="text-red-600">Toplam Yanlış</div>
                   </div>
                   <div className="text-center p-2 bg-gray-100 rounded">
                     <div className="font-semibold text-gray-700">
-                      {questionStatsData.reduce((sum: number, item: any) => sum + (item.blank_answers || 0), 0)}
+                      {questionStatsData
+                        .filter((item: any) => !item.books?.is_story_book) // Hikaye kitaplarını hariç tut
+                        .reduce((sum: number, item: any) => sum + (item.blank_answers || 0), 0)}
                     </div>
                     <div className="text-gray-600">Toplam Boş</div>
                   </div>
-                </div>                
+                </div>
                 {/* Ders Bazında Detaylı İstatistikler */}
                 {getSubjectStatistics().length > 0 && (
                   <div className="mt-6 space-y-4">

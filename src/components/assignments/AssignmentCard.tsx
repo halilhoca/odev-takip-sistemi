@@ -36,8 +36,8 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({
           <div className="flex-1 min-w-0">
             <div className="flex items-center mb-2 gap-2">
               <Book size={24} className="text-indigo-700" />
-              <h3 className="font-extrabold text-indigo-900 text-xl truncate" title={assignment.books?.title || assignment.book_title}>
-                {assignment.books?.title || assignment.book_title}
+              <h3 className="font-extrabold text-indigo-900 text-xl truncate" title={assignment.books?.title || assignment.book_title || 'Genel Not'}>
+                {assignment.books?.title || assignment.book_title || 'Genel Not'}
               </h3>
             </div>
             <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -46,9 +46,11 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({
                   Not: {assignment.note}
                 </span>
               )}
-              <span className="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">
-                Sayfa: {assignment.page_start} - {assignment.page_end}
-              </span>
+              {(assignment.books?.title || assignment.book_title) && (
+                <span className="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">
+                  Sayfa: {assignment.page_start} - {assignment.page_end}
+                </span>
+              )}
               {assignment.time && (
                 <span className="inline-flex items-center bg-purple-100 text-purple-800 text-xs font-semibold px-2 py-1 rounded-full">
                   <Clock size={14} className="mr-1" /> {assignment.time}

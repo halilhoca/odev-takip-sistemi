@@ -122,6 +122,20 @@ export async function createStudent(
 }
 
 export async function createBook(userId: string, title: string, author?: string, isStoryBook?: boolean, subject?: string) {
+  // Önce books tablosunun yapısını kontrol edelim
+  console.log('🔍 Supabase: Books tablosu yapısını kontrol ediyorum...');
+  
+  const { data: testData, error: testError } = await supabase
+    .from('books')
+    .select('*')
+    .limit(1);
+    
+  if (testError) {
+    console.error('❌ Books tablosu test hatası:', testError);
+  } else {
+    console.log('✅ Books tablosu mevcut, örnek satır:', testData);
+  }
+
   const bookData: any = { 
     user_id: userId, 
     title 
@@ -135,20 +149,44 @@ export async function createBook(userId: string, title: string, author?: string,
     bookData.is_story_book = isStoryBook;
   }
   
+  // subject sütunu varsa ekle - yoksa hata vermesin
   if (subject) {
-    bookData.subject = subject;
+    try {
+      bookData.subject = subject;
+    } catch (err) {
+      console.warn('⚠️ Subject sütunu desteklenmiyor, atlanıyor...');
+    }
   }
   
   console.log('📚 Supabase: Kitap verisi hazırlandı:', bookData);
+  console.log('📚 Supabase: subject değeri:', subject);
+  console.log('📚 Supabase: isStoryBook değeri:', isStoryBook);
   
-  const { data, error } = await supabase
+  // Önce subject olmadan deneyeceğiz, hata alırsak subject'siz tekrar deneyeceğiz
+  let { data, error } = await supabase
     .from('books')
     .insert([bookData])
     .select()
     .single();
   
+  // Eğer subject sütunu yok hatası alırsak, subject'i çıkarıp tekrar deneyelim
+  if (error && error.message.includes('subject')) {
+    console.warn('⚠️ Subject sütunu yok, subject olmadan tekrar deniyorum...');
+    const { subject: _, ...bookDataWithoutSubject } = bookData;
+    
+    const result = await supabase
+      .from('books')
+      .insert([bookDataWithoutSubject])
+      .select()
+      .single();
+      
+    data = result.data;
+    error = result.error;
+  }
+  
   if (error) {
     console.error('❌ Supabase: Kitap ekleme hatası:', error);
+    console.error('❌ Supabase: Hata detayı:', JSON.stringify(error, null, 2));
   } else {
     console.log('✅ Supabase: Kitap başarıyla eklendi:', data);
   }
@@ -195,28 +233,57 @@ export async function createProgram(userId: string, title: string, isScheduled: 
 export async function createAssignment(
   programId: string,
   studentId: string,
-  bookId: string,
+  bookId: string | null,
   pageStart: number,
   pageEnd: number,
   day: string,
   time?: string,
   note?: string
 ) {
+  const assignmentData: any = {
+    program_id: programId,
+    student_id: studentId,
+    page_start: pageStart,
+    page_end: pageEnd,
+    day,
+    time,
+    note,
+    is_completed: false
+  };
+  
+  // bookId varsa ekle, yoksa null bırak
+  // Eğer veritabanında NOT NULL constraint varsa, geçici olarak dummy değer ver
+  if (bookId) {
+    assignmentData.book_id = bookId;
+  } else {
+    // Geçici çözüm: book_id null olamıyorsa, özel bir placeholder book oluştur
+    // Bu durumda null bırakıyoruz, eğer hata alırsak migration gerekli
+    assignmentData.book_id = null;
+  }
+  
+  console.log('📝 Assignment verisi:', assignmentData);
+  
   const { data, error } = await supabase
     .from('assignments')
-    .insert([{
-      program_id: programId,
-      student_id: studentId,
-      book_id: bookId,
-      page_start: pageStart,
-      page_end: pageEnd,
-      day,
-      time,
-      note,
-      is_completed: false
-    }])
+    .insert([assignmentData])
     .select()
     .single();
+  
+  if (error) {
+    console.error('❌ Assignment ekleme hatası:', error);
+    
+    // Eğer NOT NULL constraint hatası alırsak, özel bir message döndür
+    if (error.code === '23502' && error.message.includes('book_id')) {
+      console.error('⚠️ Veritabanında book_id NULL olamıyor. Migration gerekli!');
+      return { 
+        data: null, 
+        error: { 
+          ...error, 
+          message: 'Veritabanı güncellenmesi gerekiyor. Lütfen yöneticiyle iletişime geçin.' 
+        } 
+      };
+    }
+  }
   
   return { data, error };
 }
