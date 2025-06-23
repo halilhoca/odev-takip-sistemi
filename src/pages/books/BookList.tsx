@@ -34,10 +34,15 @@ const BookList: React.FC = () => {
       fetchBooks(user.id);
       fetchStudents(user.id);
     }
-  }, [user, fetchBooks, fetchStudents]);
-  const handleAddBook = async () => {
+  }, [user, fetchBooks, fetchStudents]);  const handleAddBook = async () => {
     if (!newBookTitle) {
       toast.error('Kitap başlığı gereklidir');
+      return;
+    }
+    
+    // Hikaye kitabı değilse ders bilgisi zorunlu
+    if (!isStoryBook && !newBookSubject.trim()) {
+      toast.error('Ders kitapları için ders bilgisi gereklidir');
       return;
     }
     
@@ -53,7 +58,10 @@ const BookList: React.FC = () => {
           selectedStudent: selectedStudentId 
         });
         
-        const book = await addBook(user.id, newBookTitle, newBookAuthor, isStoryBook, newBookSubject);
+        // Hikaye kitabı ise subject'i boş bırak veya "Hikaye" olarak ayarla
+        const finalSubject = isStoryBook ? (newBookSubject || 'Hikaye') : newBookSubject;
+        
+        const book = await addBook(user.id, newBookTitle, newBookAuthor, isStoryBook, finalSubject);
         
         if (book) {
           console.log('✅ Kitap başarıyla eklendi:', book);
@@ -174,12 +182,11 @@ const BookList: React.FC = () => {
             placeholder="Yazar adını girin"
             fullWidth
           />
-          
-          <Input
-            label="Ders"
+            <Input
+            label={isStoryBook ? "Ders (İsteğe bağlı)" : "Ders *"}
             value={newBookSubject}
             onChange={(e) => setNewBookSubject(e.target.value)}
-            placeholder="Ders adını girin (ör: Matematik, Türkçe, Fen)"
+            placeholder={isStoryBook ? "Ders adını girin (isteğe bağlı)" : "Ders adını girin (ör: Matematik, Türkçe, Fen)"}
             fullWidth
           />
           
