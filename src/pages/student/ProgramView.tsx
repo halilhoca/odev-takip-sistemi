@@ -36,7 +36,7 @@ const ProgramView: React.FC = () => {
           .from('assignments')
           .select(`
             *,
-            books (title, subject),
+            books (title, subject, is_story_book),
             students (name)
           `)
           .eq('program_id', programId)
